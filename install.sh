@@ -192,8 +192,8 @@ else
 	warn "firefox is not installed; skipping its settings"
 fi
 
-# The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer mouse's DPI without root.
-say "udev: Razer DPI access"
+# The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer or Endgame Gear mouse's DPI without root.
+say "udev: Razer / Endgame Gear DPI access"
 sudo_place etc/udev/rules.d/70-niri-mouse-dpi.rules /etc/udev/rules.d/70-niri-mouse-dpi.rules
 sudo udevadm control --reload || warn "could not reload udev rules; they take effect after a reboot"
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true

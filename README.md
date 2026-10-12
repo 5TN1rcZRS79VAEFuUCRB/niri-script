@@ -48,7 +48,7 @@ with niri picking the fastest refresh rate for it. On a desktop (no battery) the
 | Firefox as the default browser, so links from other programs open there | `~/.config/mimeapps.list` |
 | Firefox extensions: uBlock Origin and Violentmonkey, installed by a policy (`policies.json`) | `/etc/firefox/policies/` (needs sudo) |
 | Always-visible userscript (`firefox/always-visible.user.js`) — makes pages act focused/visible in the background. Imported into Violentmonkey by hand once (a policy can't seed its scripts) | Violentmonkey |
-| A udev rule letting `niri-mouse` read a Razer mouse's DPI | `/etc/udev/rules.d/` (needs sudo) |
+| A udev rule letting `niri-mouse` read a Razer or Endgame Gear mouse's DPI | `/etc/udev/rules.d/` (needs sudo) |
 | The text console (login prompt after a reboot) powers the monitors off after 10 minutes without a key press | `/etc/systemd/system/console-blank.service` (needs sudo) |
 | `.local` hostnames over mDNS (`ssh user@machine.local`): Avahi enabled, `mdns_minimal` added to the `hosts:` line | `/etc/nsswitch.conf` (needs sudo) |
 | Printing: CUPS with the Canon MX920 as the default printer (Gutenprint driver; the printer's own driverless mode fails), reached as `488E78000000.local` | CUPS, `systemctl enable cups` (needs sudo) |
@@ -91,7 +91,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | **Tray apps menu** | `Mod+Shift+T`, or right-click the window title in the bar |
 | **Network picker** | `Mod+N` |
 | **Battery details / power profile** | `Mod+Shift+P` |
-| **Mouse speed / acceleration profile (flat or adaptive), shows a Razer mouse's DPI** | `Mod+Shift+M` |
+| **Mouse speed / acceleration profile (flat or adaptive), shows a Razer or Endgame Gear mouse's DPI** | `Mod+Shift+M` |
 | **School assignments: next task, 10-minute focus timer, open / mark done** | `Mod+T` |
 | **Screenshot: whole screen / pick an area or window / the focused window** | `Print` / `Shift+Print` / `Alt+Print` |
 
