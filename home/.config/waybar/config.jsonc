@@ -26,6 +26,7 @@
     // SIGRTMIN+8 when it changes. Click: the todo menu (Mod+T).
     "custom/todo": {
         "exec": "niri-status todo",
+        "tooltip": false,
         "interval": 1,
         "signal": 8,
         "escape": true,
@@ -34,12 +35,14 @@
     // CPU/GPU, RAM and battery: niri-status prints a new line every 2 s.
     "custom/stats": {
         "exec": "niri-status",
+        "tooltip": false,
         "escape": true
     },
     // niri-audio sends SIGRTMIN+9 after a volume or device change. Clicks as on dwm's status text:
     // left the output picker, right the input picker, middle mute, wheel the volume.
     "custom/audio": {
         "exec": "niri-audio status",
+        "tooltip": false,
         "interval": 5,
         "signal": 9,
         "escape": true,
@@ -52,6 +55,7 @@
     // Not waybar's clock module: its format has no unpadded hour (%-I).
     "custom/clock": {
         "exec": "date '+%a %-I:%M %p'",
+        "tooltip": false,
         "interval": 1
     }
 }

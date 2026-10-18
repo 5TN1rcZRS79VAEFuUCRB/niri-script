@@ -10,6 +10,7 @@ foot
 bemenu
 bemenu-wayland
 swayidle                  # monitors off after 10 minutes idle (see ~/.config/niri/config.kdl)
+wl-clipboard              # wl-paste: terminal apps (Claude Code's Ctrl+V) read pasted screenshots with it
 
 # --- fonts (bar, terminal and menus all resolve to DejaVu Sans Mono; the bar icons come from the Nerd Font symbols) ---
 ttf-dejavu
