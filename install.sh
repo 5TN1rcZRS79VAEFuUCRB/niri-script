@@ -199,6 +199,13 @@ sudo udevadm control --reload || warn "could not reload udev rules; they take ef
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
 
+# Outside niri (the login prompt after a reboot) nothing turned the monitors off.
+say "Console: monitors off after 10 minutes idle"
+sudo_place etc/systemd/system/console-blank.service /etc/systemd/system/console-blank.service
+sudo systemctl daemon-reload
+sudo systemctl enable console-blank.service >/dev/null 2>&1 || warn "could not enable console-blank.service"
+sudo systemctl restart console-blank.service || warn "could not start console-blank.service; it runs at the next boot"
+
 # ---------------------------------------------------------------- local hostnames (mDNS)
 # Avahi announces this machine as <hostname>.local, and nss-mdns lets ssh, ping, etc.
 # look up other machines' .local names. Adds mdns_minimal to the hosts: line only once.

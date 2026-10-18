@@ -1,0 +1,12 @@
+# The text console (the login prompt after a reboot, or after niri exits) powers the monitors off
+# after 10 minutes without a key press, like swayidle does inside niri; a key press wakes them.
+# The setting is kernel-wide, so writing it to tty1 once per boot covers every console.
+[Unit]
+Description=Power the monitors off after 10 minutes idle at the text console
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'setterm --term linux --blank 10 --powerdown 1 > /dev/tty1'
+
+[Install]
+WantedBy=multi-user.target
