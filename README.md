@@ -33,7 +33,8 @@ Text too small (e.g. a 4K or laptop screen)? Edit `scale` in `~/.config/niri/loc
 the moment you save, per monitor. That file is this machine's own (the installer writes it once and then
 leaves it alone), so it is also the place for a monitor's `mode`, `variable-refresh-rate` (G-SYNC/FreeSync)
 or `position`; `niri msg outputs` lists the names and modes. Each monitor starts at its native resolution
-with niri picking the fastest refresh rate for it.
+with niri picking the fastest refresh rate for it. On a desktop (no battery) the installer also turns on
+`variable-refresh-rate` for every monitor, for all windows and fullscreen.
 
 ## What gets installed
 

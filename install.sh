@@ -144,6 +144,13 @@ if [ -n "$SCALE" ] || [ ! -e "$LOCAL_KDL" ]; then
 	place "$tmp" "$LOCAL_KDL"
 	rm -f "$tmp"
 fi
+# A desktop (no battery) runs every monitor with VRR (G-SYNC/FreeSync) always on: every window,
+# fullscreen games included. Added to an existing local.kdl too, unless it already sets VRR somewhere.
+if ! compgen -G '/sys/class/power_supply/BAT*' >/dev/null && [ -e "$LOCAL_KDL" ] \
+	&& ! grep -q '^[[:space:]]*variable-refresh-rate' "$LOCAL_KDL"; then
+	say "Desktop: variable refresh rate on every monitor"
+	sed -i '/^[[:space:]]*output /a\    variable-refresh-rate' "$LOCAL_KDL"
+fi
 
 # ---------------------------------------------------------------- Firefox
 find_ff_profile() {

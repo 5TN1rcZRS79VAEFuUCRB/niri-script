@@ -177,7 +177,7 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 }
 
-// This machine's monitors (scale, refresh rate), written once by install.sh.
+// This machine's monitors (scale, refresh rate, VRR on desktops), written once by install.sh.
 include optional=true "local.kdl"
 // Mouse speed and acceleration picked with Mod+Shift+M (written by niri-mouse).
 include optional=true "mouse.kdl"
