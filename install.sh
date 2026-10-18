@@ -272,7 +272,8 @@ fi
 # ---------------------------------------------------------------- auto-update
 # niri-update.timer pulls this clone every 5 minutes and re-runs this installer on new commits.
 say "Auto-update: pull and reinstall on new commits"
-ln -sfn "$PWD" "$HOME/.local/share/arch-dwm-desktop"
+ln -sfn "$PWD" "$HOME/.local/share/niri-script"
+[ ! -L "$HOME/.local/share/arch-dwm-desktop" ] || rm "$HOME/.local/share/arch-dwm-desktop"   # the link's name before the repo became niri-script
 systemctl --user enable --now niri-update.timer \
 	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now niri-update.timer"
 
@@ -339,7 +340,8 @@ fi
 say "Done"
 # niri-update compares this with the pulled commit to know whether to install again.
 mkdir -p "$HOME/.local/state"
-git rev-parse HEAD > "$HOME/.local/state/arch-dwm-desktop-installed"
+git rev-parse HEAD > "$HOME/.local/state/niri-script-installed"
+rm -f "$HOME/.local/state/arch-dwm-desktop-installed"   # its name before the repo rename
 # Hand edits to these files are gone from the live copies; copy back into the repo any worth keeping.
 if [ ${#REPLACED[@]} -gt 0 ]; then
 	warn "these files differed from the repo and were replaced or removed (old copies in $BACKUP):"
