@@ -71,14 +71,12 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | Action | Keys |
 | --- | --- |
 | Terminal / launcher | `Mod+Shift+Enter` / `Mod+P` |
-| Focus the column left / right | `Mod+H` / `Mod+L` (or `Mod+Shift`+scroll) |
-| Focus the window below / above in a column | `Mod+J` / `Mod+K` |
-| Move the window instead | add `Ctrl` (`Mod+Ctrl+H/J/K/L`) |
-| Workspace below / above | `Mod+U` / `Mod+I` (or `Mod`+scroll with a wheel or two fingers on the touchpad, `Mod+Page Down/Up`) |
-| Take the window to the workspace below / above | `Mod+Ctrl+U` / `Mod+Ctrl+I` |
+| Previous / next window | `Mod+A` / `Mod+D` (or `Mod+H` / `Mod+L`) |
+| Workspace above / below | `Mod+W` / `Mod+S` (or `Mod+K` / `Mod+J`, or `Mod`+scroll with a wheel or two fingers on the touchpad) |
+| Take the window along | add `Ctrl` (`Mod+Ctrl+W/A/S/D`); below the last workspace makes a new one |
 | Overview of every workspace (pick a window with the mouse) | `Mod+Tab`, or push the mouse into the top-left corner |
 | Column width: 1/3, 1/2, 2/3 / full / 10% steps | `Mod+R` / `Mod+F` / `Mod+-` and `Mod+=` |
-| Fullscreen / float / tabbed column | `Mod+Shift+F` / `Mod+V` / `Mod+W` |
+| Fullscreen / float | `Mod+Shift+F` / `Mod+V` |
 | Stack a window into the next column, or pull it out | `Mod+[` / `Mod+]` |
 | Monitor left / right (take the window along) | `Mod+,` / `Mod+.` (`Mod+Shift+,` / `Mod+Shift+.`) |
 | Close window | `Mod+Shift+C` |
@@ -92,7 +90,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | **Network picker** | `Mod+N` |
 | **Battery details / power profile** | `Mod+Shift+P` |
 | **Mouse speed / acceleration profile (flat or adaptive), shows a Razer mouse's DPI** | `Mod+Shift+M` |
-| **School assignments: next task, 10-minute focus timer, open / mark done** | `Mod+A` |
+| **School assignments: next task, 10-minute focus timer, open / mark done** | `Mod+T` |
 | **Screenshot: whole screen / pick an area or window / the focused window** | `Print` / `Shift+Print` / `Alt+Print` |
 
 All keys are in `~/.config/niri/config.kdl` (copied from `home/.config/niri/` here); niri applies a
@@ -144,9 +142,9 @@ switch by choosing one.
 `dwm-todo` puts the next Canvas or Schoology assignment, `todo.txt` task or today's workout at the left of the status text (title and
 time left, points and a streak of days in a row with something turned in on time or a finished focus
 session, where every 7 active days earn a streak freeze that saves a missed day; never a count of late work) and sends reminders 3 days, 1 day and 3 hours before
-each due date, plus a summary every morning. `Mod+A` opens a dmenu list: start a 10-minute focus session
+each due date, plus a summary every morning. `Mod+T` opens a dmenu list: start a 10-minute focus session
 (it opens the assignment and counts down in the bar with the task's name; when it ends, a notification
-says so and `Mod+A` offers 10 more minutes, a 5-minute break, or stopping for now without finishing, so nothing grabs the keyboard while you
+says so and `Mod+T` offers 10 more minutes, a 5-minute break, or stopping for now without finishing, so nothing grabs the keyboard while you
 type; **Finished it** ends a session early and checks the task off), open an assignment in the browser,
 or mark Schoology work done.
 

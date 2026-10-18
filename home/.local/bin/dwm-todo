@@ -5,7 +5,7 @@ a streak and reminders.
 
   dwm-todo daemon    sync every 5 min, refresh the bar and send reminders every minute (started by niri)
   dwm-todo sync      sync once and print the bar text and any errors
-  dwm-todo menu      dmenu: next task, 10-minute focus timer, open / mark done (Mod+A in ~/.config/niri/config.kdl)
+  dwm-todo menu      dmenu: next task, 10-minute focus timer, open / mark done (Mod+T in ~/.config/niri/config.kdl)
   dwm-todo selftest  check the feed parser, ordering and scoring
 
 Setup, in ~/.local/share/dwm-todo/ (share that folder with Syncthing to keep machines in step):
@@ -53,7 +53,7 @@ RUN = os.environ.get("XDG_RUNTIME_DIR", f"{HOME}/.cache")
 BAR = f"{RUN}/dwm-todo-bar"      # one line, read by dwm-status.sh
 ANKI_COUNT = f"{RUN}/dwm-todo-anki"  # "<date> <due>", written by the Anki add-on after each answered card
 PIDFILE = f"{RUN}/dwm-todo.pid"  # the daemon; the Anki add-on sends it SIGUSR1 after every answered card
-STICKY = f"{RUN}/dwm-todo-sticky"  # ids of notifications that stay until clicked; Mod+a closes them
+STICKY = f"{RUN}/dwm-todo-sticky"  # ids of notifications that stay until clicked; Mod+t closes them
 FOCUS = f"{RUN}/dwm-todo-focus"  # "<end epoch> <icon> <text>": the running focus/break timer, read by dwm-status.sh
 DMENU = ["dmenu", "-i", "-l", "15"]
 
@@ -548,7 +548,7 @@ def bar_text(tasks, errors, s, now):
 
 
 def notify(title, body="", urgent=False, tag=None):
-    """Urgent ones stay until clicked (dunstrc) or until Mod+a opens the menu (close_sticky).
+    """Urgent ones stay until clicked (dunstrc) or until Mod+t opens the menu (close_sticky).
     A tag replaces the shown notification with the same tag instead of stacking under it."""
     hint = ["-h", f"string:x-dunst-stack-tag:{tag}"] if tag else []
     try:
@@ -700,7 +700,7 @@ def timer(secs, icon, text):
 
 
 def focus(t, reopen=True):
-    """One 10-minute session. When it ends, a notification points to Mod+a for more or a break:
+    """One 10-minute session. When it ends, a notification points to Mod+t for more or a break:
     nothing pops up that grabs the keyboard while you're typing."""
     if reopen:
         open_url(t)
@@ -717,7 +717,7 @@ def focus(t, reopen=True):
         level_up(s, total(s) - 2)
         pts = total(s)
     tick()
-    notify(f"Session done: +2 pts ({pts})", "Mod+a: 10 more minutes or a 5-minute break", urgent=True)
+    notify(f"Session done: +2 pts ({pts})", "Mod+t: 10 more minutes or a 5-minute break", urgent=True)
 
 
 def rest(t):
@@ -726,7 +726,7 @@ def rest(t):
     if timer(REST_SECS, COFFEE, "break"):
         with state() as s:
             s["focus_next"] = time.time()
-        notify(f"Break's over: {t['title']}", "Mod+a: 10 more minutes", urgent=True)
+        notify(f"Break's over: {t['title']}", "Mod+t: 10 more minutes", urgent=True)
 
 
 def workout_done(listed):
