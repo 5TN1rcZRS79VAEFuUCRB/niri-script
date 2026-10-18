@@ -9,6 +9,8 @@ set -euo pipefail
 trap 'notify-send -u critical "niri-update failed" "journalctl --user -u niri-update" 2>/dev/null || true' ERR
 
 cd "$HOME/.local/share/niri-script"   # symlink to the clone, made by install.sh
+# Offline (e.g. just resumed and Wi-Fi is still connecting): skip quietly, the next run retries.
+getent hosts github.com >/dev/null || exit 0
 git pull --ff-only -q                       # refuses (and notifies) if this clone has diverged
 [ "$(git rev-parse HEAD)" = "$(cat "$HOME/.local/state/niri-script-installed" 2>/dev/null)" ] && exit 0
 
