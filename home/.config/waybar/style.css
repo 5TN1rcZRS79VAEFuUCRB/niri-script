@@ -50,6 +50,18 @@ window#waybar {
 	color: #000000;
 }
 
+/* niri always keeps a spare empty workspace at the end. Its dot shows only below a workspace with
+   windows, so with nothing open there is one dot (niri-down follows the same rule). GTK has no
+   display: none, so shrink it to nothing (the font size goes on the label, as * above sets it there). */
+#workspaces button.empty + button.empty:not(.active) {
+	padding: 0;
+	min-width: 0;
+}
+
+#workspaces button.empty + button.empty:not(.active) label {
+	font-size: 0;
+}
+
 /* No block for an empty title or tray. */
 window#waybar.empty #window,
 #tray.empty {
