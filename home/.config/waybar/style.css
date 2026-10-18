@@ -1,4 +1,4 @@
-/* dwm's bar colors and font: one solid strip, the same height as the dmenu (wmenu) bar so a menu covers it. */
+/* dwm's bar colors and font: one solid strip, with thin lines between the sections. */
 * {
 	font-family: monospace, "Symbols Nerd Font Mono";
 	font-size: 10pt;
@@ -25,8 +25,33 @@ window#waybar {
 	color: #000000;
 }
 
+#workspaces,
+#window {
+	border-right: 1px solid #444444;
+}
+
+#tray,
+#custom-status {
+	border-left: 1px solid #444444;
+}
+
+/* No line for an empty title or tray. */
+window#waybar.empty #window,
+#tray.empty {
+	border: none;
+}
+
 #window,
 #tray,
 #custom-status {
 	padding: 0 10px;
+}
+
+/* A little inset from the top and bottom, for a boxier look. The bar stays no taller than the
+   dmenu bar (its font size is in ~/.local/bin/dmenu), so a menu covers it. */
+#workspaces,
+#window,
+#tray,
+#custom-status {
+	margin: 1px 0;
 }
