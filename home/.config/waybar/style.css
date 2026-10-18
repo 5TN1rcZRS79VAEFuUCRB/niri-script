@@ -1,4 +1,6 @@
-/* dwm's bar colors and font: one solid strip, with thin lines between the sections. */
+/* dwm's monochrome colors, as square blocks along the top edge. The blocks stay no taller than the
+   dmenu bar (the same font, set in ~/.local/bin/dmenu), so a menu covers them: no vertical
+   margins, padding or borders. */
 * {
 	font-family: monospace, "Symbols Nerd Font Mono";
 	font-size: 10pt;
@@ -8,8 +10,26 @@
 }
 
 window#waybar {
-	background: #222222;
+	background: transparent;
 	color: #bbbbbb;
+}
+
+#workspaces,
+#window,
+#tray,
+#custom-status {
+	background: #222222;
+	padding: 0 10px;
+}
+
+#workspaces,
+#window,
+#tray {
+	margin-right: 6px;
+}
+
+#workspaces {
+	padding: 0;
 }
 
 #workspaces button {
@@ -25,33 +45,10 @@ window#waybar {
 	color: #000000;
 }
 
-#workspaces,
-#window {
-	border-right: 1px solid #444444;
-}
-
-#tray,
-#custom-status {
-	border-left: 1px solid #444444;
-}
-
-/* No line for an empty title or tray. */
+/* No block for an empty title or tray. */
 window#waybar.empty #window,
 #tray.empty {
-	border: none;
-}
-
-#window,
-#tray,
-#custom-status {
-	padding: 0 10px;
-}
-
-/* A little inset from the top and bottom, for a boxier look. The bar stays no taller than the
-   dmenu bar (its font size is in ~/.local/bin/dmenu), so a menu covers it. */
-#workspaces,
-#window,
-#tray,
-#custom-status {
-	margin: 1px 0;
+	background: transparent;
+	padding: 0;
+	margin: 0;
 }
