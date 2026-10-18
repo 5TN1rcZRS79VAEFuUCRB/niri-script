@@ -99,6 +99,11 @@ binds {
     Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
     Mod+Shift+WheelScrollDown { focus-column-right; }
     Mod+Shift+WheelScrollUp   { focus-column-left; }
+    // The same with two fingers on a touchpad (a different event from a mouse wheel).
+    Mod+TouchpadScrollDown  cooldown-ms=150 { focus-workspace-down; }
+    Mod+TouchpadScrollUp    cooldown-ms=150 { focus-workspace-up; }
+    Mod+TouchpadScrollRight cooldown-ms=150 { focus-column-right; }
+    Mod+TouchpadScrollLeft  cooldown-ms=150 { focus-column-left; }
 
     // Monitors (dwm's Mod+, and Mod+.).
     Mod+Comma        { focus-monitor-left; }

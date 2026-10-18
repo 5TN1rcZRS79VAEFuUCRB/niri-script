@@ -74,7 +74,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | Focus the column left / right | `Mod+H` / `Mod+L` (or `Mod+Shift`+scroll) |
 | Focus the window below / above in a column | `Mod+J` / `Mod+K` |
 | Move the window instead | add `Ctrl` (`Mod+Ctrl+H/J/K/L`) |
-| Workspace below / above | `Mod+U` / `Mod+I` (or `Mod`+scroll, `Mod+Page Down/Up`) |
+| Workspace below / above | `Mod+U` / `Mod+I` (or `Mod`+scroll with a wheel or two fingers on the touchpad, `Mod+Page Down/Up`) |
 | Take the window to the workspace below / above | `Mod+Ctrl+U` / `Mod+Ctrl+I` |
 | Overview of every workspace (pick a window with the mouse) | `Mod+Tab`, or push the mouse into the top-left corner |
 | Column width: 1/3, 1/2, 2/3 / full / 10% steps | `Mod+R` / `Mod+F` / `Mod+-` and `Mod+=` |
