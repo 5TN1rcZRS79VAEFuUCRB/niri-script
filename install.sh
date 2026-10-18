@@ -199,11 +199,6 @@ sudo udevadm control --reload || warn "could not reload udev rules; they take ef
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
 
-# logind leaves the lid to niri-lid, which suspends after 5 minutes closed instead of at once.
-say "logind: lid close suspends after 5 minutes"
-sudo_place etc/systemd/logind.conf.d/50-niri-lid.conf /etc/systemd/logind.conf.d/50-niri-lid.conf
-sudo systemctl reload systemd-logind || warn "could not reload logind; the lid delay takes effect after a reboot"
-
 # ---------------------------------------------------------------- local hostnames (mDNS)
 # Avahi announces this machine as <hostname>.local, and nss-mdns lets ssh, ping, etc.
 # look up other machines' .local names. Adds mdns_minimal to the hosts: line only once.
