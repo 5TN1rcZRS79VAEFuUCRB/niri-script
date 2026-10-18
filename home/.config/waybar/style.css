@@ -1,4 +1,4 @@
-/* dwm's bar colors and font. */
+/* A floating bar of rounded pills over a see-through strip (margins are in config.jsonc). */
 * {
 	font-family: monospace, "Symbols Nerd Font Mono";
 	font-size: 10pt;
@@ -8,25 +8,56 @@
 }
 
 window#waybar {
-	background: #222222;
-	color: #bbbbbb;
+	background: transparent;
+	color: #cdd6f4;
+}
+
+#workspaces,
+#window,
+#tray,
+#custom-status {
+	background: rgba(24, 24, 37, 0.92);
+	border-radius: 8px;
+	padding: 2px 10px;
+}
+
+#window,
+#tray {
+	margin-right: 6px;
+}
+
+#workspaces {
+	padding: 2px 4px;
+	margin-right: 6px;
 }
 
 #workspaces button {
 	padding: 0 6px;
-	color: #bbbbbb;
+	margin: 2px 0;
+	color: #7f849c;
+	border-radius: 6px;
 	box-shadow: none;
 	text-shadow: none;
 }
 
-#workspaces button.active,
 #workspaces button:hover {
-	background: #eeeeee;
-	color: #000000;
+	background: #313244;
+	color: #cdd6f4;
 }
 
-#window,
-#tray,
+#workspaces button.active {
+	background: #89b4fa;
+	color: #11111b;
+}
+
+/* No pill for an empty title or tray. */
+window#waybar.empty #window,
+#tray.empty {
+	background: transparent;
+	padding: 0;
+	margin: 0;
+}
+
 #custom-status {
-	padding: 0 8px;
+	color: #bac2de;
 }

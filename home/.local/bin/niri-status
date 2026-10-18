@@ -110,7 +110,7 @@ while true; do
 	# CPU temp and the GPU block are left out when the hardware has no sensor for them.
 	stats="  ${cpu:-0}%"
 	[ -n "$ctemp" ] && stats+=" ${ctemp}°"
-	[ -n "$gpu_util" ] && stats+=" | 󰢮 ${gpu_util}% ${gpu_temp}°"
+	[ -n "$gpu_util" ] && stats+="   󰢮 ${gpu_util}% ${gpu_temp}°"
 
 	hw=""; read -r hw < "$TODO_BAR" 2>/dev/null
 	# A running focus or break timer replaces the next-assignment text: "<icon> 7:32 <task>".
@@ -120,6 +120,6 @@ while true; do
 		printf -v hw '%s %d:%02d %s' "$ficon" $((left / 60)) $((left % 60)) "$ftext"
 	fi
 
-	printf '%s\n' "${hw:+ $hw |}${stats} |  ${ram:-?}${bat:+ | $bat} | ${vol:- ?} | ${clock} "
+	printf '%s\n' "${hw:+$hw   }${stats}    ${ram:-?}${bat:+   $bat}   ${vol:- ?}   ${clock}"
 	sleep 1 & wait $!
 done

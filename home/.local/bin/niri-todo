@@ -538,14 +538,14 @@ def bar_text(tasks, errors, s, now):
     items = todo(tasks, s, now)
     free = break_until(items, now)
     if free and not errors:
-        return f"{COFFEE} free until {time.strftime('%a %-m/%-d', time.localtime(free))} | {STAR} {total(s)} {FIRE} {streak(s)}"
+        return f"{COFFEE} free until {time.strftime('%a %-m/%-d', time.localtime(free))}   {STAR} {total(s)} {FIRE} {streak(s)}"
     if items:
         head = f"{short(items[0]['title'])} ({left(items[0]['due'] - now)})"
     else:
         head = "run niri-todo sync" if errors and not tasks else "all caught up"
     parts = [(f"{WARN} " if errors else f"{CAP} ") + head]
     parts.append(f"{STAR} {total(s)} {FIRE} {streak(s)}")
-    return " | ".join(parts)
+    return "   ".join(parts)
 
 
 def notify(title, body="", urgent=False, tag=None):
