@@ -7,6 +7,16 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
+# This repo used to be arch-dwm-desktop: a clone still in a folder of that name moves to ~/niri-script and
+# pulls from the new URL (GitHub redirects the old one, but only for as long as nothing else takes the name).
+OLD_NAME=arch-dwm-desktop
+if [ "$PWD" = "$HOME/$OLD_NAME" ] && [ ! -e "$HOME/niri-script" ]; then
+	mv "$PWD" "$HOME/niri-script"
+	cd "$HOME/niri-script"
+fi
+url="$(git remote get-url origin 2>/dev/null || true)"
+[[ $url != *"/$OLD_NAME"* ]] || git remote set-url origin "${url/\/$OLD_NAME/\/niri-script}"
+
 SCALE="${SCALE:-}"
 DO_PACKAGES=1
 WITH_STEAM=0
@@ -273,7 +283,7 @@ fi
 # niri-update.timer pulls this clone every 5 minutes and re-runs this installer on new commits.
 say "Auto-update: pull and reinstall on new commits"
 ln -sfn "$PWD" "$HOME/.local/share/niri-script"
-[ ! -L "$HOME/.local/share/arch-dwm-desktop" ] || rm "$HOME/.local/share/arch-dwm-desktop"   # the link's name before the repo became niri-script
+[ ! -L "$HOME/.local/share/$OLD_NAME" ] || rm "$HOME/.local/share/$OLD_NAME"
 systemctl --user enable --now niri-update.timer \
 	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now niri-update.timer"
 
@@ -341,7 +351,7 @@ say "Done"
 # niri-update compares this with the pulled commit to know whether to install again.
 mkdir -p "$HOME/.local/state"
 git rev-parse HEAD > "$HOME/.local/state/niri-script-installed"
-rm -f "$HOME/.local/state/arch-dwm-desktop-installed"   # its name before the repo rename
+rm -f "$HOME/.local/state/$OLD_NAME-installed"
 # Hand edits to these files are gone from the live copies; copy back into the repo any worth keeping.
 if [ ${#REPLACED[@]} -gt 0 ]; then
 	warn "these files differed from the repo and were replaced or removed (old copies in $BACKUP):"
