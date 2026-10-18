@@ -1,9 +1,15 @@
 #!/bin/sh
-# dmenu for Wayland: wmenu takes dmenu's options (-i, -l, -p), so the pickers in ~/.local/bin keep
-# calling "dmenu". Adds dmenu's colors from the old config.h.
+# dmenu for Wayland: bemenu takes dmenu's options (-i, -l, -p), so the pickers in ~/.local/bin keep
+# calling "dmenu". Adds dmenu's colors from the old config.h. niri puts the menu just under the bar,
+# so it is drawn like the bar's blocks: the same font, height (-H 22 plus the border, within 1px) and border as
+# ~/.config/waybar/style.css. (bemenu's -M and -W do nothing under niri, so it stays full width.)
 #
 #   dmenu [dmenu options]    a menu of the lines on stdin
 #   dmenu run                the app launcher (Mod+P)
-colors='-N 222222 -n bbbbbb -M eeeeee -m 000000 -S eeeeee -s 000000'   # split into words on purpose
-[ "$1" = run ] && exec wmenu-run -f "monospace 10" $colors -p run:
-exec wmenu -f "monospace 10" $colors "$@"
+menu=bemenu
+[ "$1" = run ] && { menu=bemenu-run; set -- -p run:; }
+exec "$menu" -fn "monospace 10" -H 22 -B 1 --hp 10 --bdr '#444444' \
+	--tb '#eeeeee' --tf '#000000' --fb '#222222' --ff '#bbbbbb' --cb '#bbbbbb' --cf '#222222' \
+	--nb '#222222' --nf '#bbbbbb' --ab '#222222' --af '#bbbbbb' \
+	--hb '#eeeeee' --hf '#000000' --sb '#eeeeee' --sf '#000000' \
+	--scb '#222222' --scf '#444444' "$@"

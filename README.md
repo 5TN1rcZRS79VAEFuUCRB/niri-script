@@ -39,7 +39,7 @@ with niri picking the fastest refresh rate for it.
 
 | Piece | Where it goes |
 | --- | --- |
-| niri (window manager), waybar (bar and tray), foot (terminal), wmenu (behind a `dmenu` wrapper, so the menus look as before) | packages, configured in `~/.config/niri/`, `~/.config/waybar/`, `~/.config/foot/` |
+| niri (window manager), waybar (bar and tray), foot (terminal), bemenu (behind a `dmenu` wrapper, drawn to match the bar) | packages, configured in `~/.config/niri/`, `~/.config/waybar/`, `~/.config/foot/` |
 | `.bash_profile` (starts niri when you log in on tty1) | `~/` |
 | Bar text, audio, tray menu, network (`niri-net`), battery (`niri-power`), mouse speed (`niri-mouse`), school assignments and to-dos (`niri-todo`), and the `dmenu` wrapper | `~/.local/bin/` |
 | GTK 3/4 and Qt 5/6 dark-mode config, minimal dunst notifications in the bar's colors | `~/.config/` |

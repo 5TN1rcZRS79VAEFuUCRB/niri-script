@@ -1,13 +1,14 @@
 # Packages installed by install.sh (official Arch repos only).
 # Blank lines and # comments are ignored.
 
-# --- desktop: niri (window manager), waybar (bar + tray), foot (terminal), wmenu (dmenu for Wayland) ---
+# --- desktop: niri (window manager), waybar (bar + tray), foot (terminal), bemenu (dmenu for Wayland) ---
 niri
 xwayland-satellite        # X11-only apps (Steam, many games); niri starts it when one opens
 xdg-desktop-portal-gnome  # screen sharing and screenshots for apps under niri
 waybar
 foot
-wmenu
+bemenu
+bemenu-wayland
 swayidle                  # monitors off after 10 minutes idle (see ~/.config/niri/config.kdl)
 
 # --- fonts (bar, terminal and menus all resolve to DejaVu Sans Mono; the bar icons come from the Nerd Font symbols) ---

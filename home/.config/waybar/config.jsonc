@@ -3,6 +3,7 @@
 {
     "position": "top",
     "margin-top": 5,
+    "margin-bottom": 5,  // a gap above the menus too, which open just under the bar
     "margin-left": 8,
     "margin-right": 8,
     "modules-left": ["niri/workspaces", "niri/window"],
