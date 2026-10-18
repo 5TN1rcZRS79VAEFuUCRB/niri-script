@@ -3,6 +3,7 @@
 # The setting is kernel-wide, so writing it to tty1 once per boot covers every console.
 [Unit]
 Description=Power the monitors off after 10 minutes idle at the text console
+After=getty@tty1.service
 
 [Service]
 Type=oneshot
