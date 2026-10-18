@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+#
+# niri-steam-overlay: make Steam's in-game overlay (Shift+Tab) follow niri's display scale.
+#
+# Steam's overlay process works out the scale (1.5 here) when a game starts and sends it to the
+# overlay code inside the game, but that message gets lost: the game side keeps its starting value
+# of 0, which means "don't scale", so at 4K the overlay is drawn at 1x and is tiny. This patches
+# that starting value in Steam's 64-bit overlay library to niri's largest output scale. A scale
+# Steam does manage to send still replaces it.
+#
+#   niri-steam-overlay        patch the library if it needs it (nothing is written otherwise)
+#
+# niri runs this at login (config.kdl), and Steam rewrites the library when it updates, so
+# niri-steam-overlay.path runs it again whenever the file changes. Takes effect for games started
+# afterwards. 32-bit games use another library and are not covered.
+
+import json
+import os
+import struct
+import subprocess
+import sys
+
+LIB = os.path.expanduser("~/.local/share/Steam/ubuntu12_64/gameoverlayrenderer.so")
+
+# Constructor of the overlay's per-game state: "movabs $0xffffffff00000000,%rax" ... a few
+# instructions ... "mov %rax,0x104(%rdi)". The low half of rax lands in the scale field (float 0.0).
+STORE = bytes.fromhex("48898704010000")
+MOVABS = bytes.fromhex("48b8")
+MOVABS_HIGH = bytes.fromhex("ffffffff")
+
+
+def niri_scale():
+    out = subprocess.run(["niri", "msg", "-j", "outputs"], capture_output=True, text=True, check=True).stdout
+    scales = [o["logical"]["scale"] for o in json.loads(out).values() if o.get("logical")]
+    return max(scales, default=1.0)
+
+
+def find_scale_field(data):
+    """Offset of the 4 bytes that become the scale field's starting value."""
+    store = data.find(STORE)
+    if store < 0 or data.find(STORE, store + 1) >= 0:
+        return None
+    movabs = data.rfind(MOVABS, max(0, store - 0x80), store)
+    if movabs < 0 or data[movabs + 6:movabs + 10] != MOVABS_HIGH:
+        return None
+    return movabs + 2
+
+
+def main():
+    if not os.path.exists(LIB):
+        return 0
+    with open(LIB, "rb") as f:
+        data = f.read()
+    at = find_scale_field(data)
+    if at is None:
+        print("niri-steam-overlay: Steam's overlay library changed; scale not patched", file=sys.stderr)
+        return 1
+    scale = niri_scale()
+    want = struct.pack("<f", scale if scale != 1 else 0.0)
+    if data[at:at + 4] == want:
+        return 0
+    # A new file renamed over the old one: games running now keep the library they loaded.
+    tmp = LIB + ".niri-tmp"
+    with open(tmp, "wb") as f:
+        f.write(data[:at] + want + data[at + 4:])
+    os.chmod(tmp, os.stat(LIB).st_mode)
+    os.replace(tmp, LIB)
+    print(f"niri-steam-overlay: overlay scale set to {scale}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

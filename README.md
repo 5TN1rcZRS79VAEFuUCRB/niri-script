@@ -115,6 +115,13 @@ lists the same apps in dmenu. Every app is also listed as `quit: <app>`: choosin
 real (an app's window close button usually just hides it back to the tray). It clicks the Quit/Exit
 entry in the app's tray menu, or sends the app a normal terminate signal if it has none.
 
+## Steam overlay scale
+
+Steam's in-game overlay (Shift+Tab) ignores the display scale, so on a scaled 4K monitor it is drawn
+tiny. `niri-steam-overlay` patches one value in Steam's 64-bit overlay library so the overlay uses
+niri's scale. niri runs it at login, and `niri-steam-overlay.path` runs it again whenever a Steam
+update replaces the library. Restart a running game to see the change. 32-bit games are not covered.
+
 ## Network picker
 
 `Mod+N` opens a dmenu list of the Wi-Fi networks in range (strongest first, with signal, security and

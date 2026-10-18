@@ -1,0 +1,9 @@
+# Steam replaces its overlay library on updates, which would undo niri-steam-overlay's patch.
+[Unit]
+Description=Re-apply the Steam overlay scale when Steam updates its overlay library
+
+[Path]
+PathChanged=%h/.local/share/Steam/ubuntu12_64/gameoverlayrenderer.so
+
+[Install]
+WantedBy=default.target

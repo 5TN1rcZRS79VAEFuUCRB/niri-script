@@ -287,6 +287,14 @@ ln -sfn "$PWD" "$HOME/.local/share/niri-script"
 systemctl --user enable --now niri-update.timer \
 	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now niri-update.timer"
 
+# ---------------------------------------------------------------- Steam overlay scale
+# Steam's in-game overlay ignores the display scale (tiny at 4K); niri-steam-overlay fixes that, and
+# the .path unit re-applies it whenever a Steam update replaces the patched library.
+say "Steam overlay: follow the display scale"
+systemctl --user enable --now niri-steam-overlay.path \
+	|| warn "could not start niri-steam-overlay.path; after logging in run: systemctl --user enable --now niri-steam-overlay.path"
+"$HOME/.local/bin/niri-steam-overlay" || warn "could not patch Steam's overlay scale; run niri-steam-overlay to see why"
+
 # ---------------------------------------------------------------- git identity
 # GitHub noreply address, so commits work and push without exposing an email.
 say "git: commit name and email"

@@ -65,6 +65,8 @@ environment {
 spawn-sh-at-startup "FONTCONFIG_FILE=$HOME/.config/waybar/fonts.conf waybar"
 // Canvas/Schoology assignments, todo.txt and workouts: bar text, reminders, daily summary. Menu is Mod+T.
 spawn-at-startup "niri-todo" "daemon"
+// Steam's in-game overlay (Shift+Tab) at the display scale; see ~/.local/bin/niri-steam-overlay.
+spawn-at-startup "niri-steam-overlay"
 // After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
 // wakes them. If niri-update installed a new commit, the session also ends then, and
 // ~/.bash_profile starts niri again. niri-update leaves both flags; each login loop clears only its own,
