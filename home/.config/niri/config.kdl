@@ -61,8 +61,10 @@ spawn-at-startup "waybar"
 spawn-at-startup "niri-todo" "daemon"
 // After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
 // wakes them. If niri-update installed a new commit, the session also ends then, and
-// ~/.bash_profile starts niri again.
-spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && niri msg action quit --skip-confirmation'"
+// ~/.bash_profile starts niri again. niri-update leaves both flags; each login loop clears only its own,
+// old (dwm-, logged in before the rename) or new (niri-), so a stale one alone must not end the session.
+// ponytail: check niri-restart-session alone once every machine has logged in again since the rename.
+spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && [ -e \"$XDG_RUNTIME_DIR/dwm-restart-session\" ] && niri msg action quit --skip-confirmation'"
 
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
