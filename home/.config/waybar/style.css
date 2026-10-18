@@ -1,4 +1,4 @@
-/* dwm's monochrome colors, as square blocks floating over a see-through strip (margins are in config.jsonc). */
+/* dwm's bar colors and font: one solid strip, the same height as the dmenu (wmenu) bar so a menu covers it. */
 * {
 	font-family: monospace, "Symbols Nerd Font Mono";
 	font-size: 10pt;
@@ -8,27 +8,8 @@
 }
 
 window#waybar {
-	background: transparent;
-	color: #bbbbbb;
-}
-
-#workspaces,
-#window,
-#tray,
-#custom-status {
 	background: #222222;
-	border: 1px solid #444444;
-	padding: 2px 10px;
-}
-
-#workspaces,
-#window,
-#tray {
-	margin-right: 6px;
-}
-
-#workspaces {
-	padding: 0;
+	color: #bbbbbb;
 }
 
 #workspaces button {
@@ -44,11 +25,8 @@ window#waybar {
 	color: #000000;
 }
 
-/* No block for an empty title or tray. */
-window#waybar.empty #window,
-#tray.empty {
-	background: transparent;
-	border: none;
-	padding: 0;
-	margin: 0;
+#window,
+#tray,
+#custom-status {
+	padding: 0 10px;
 }

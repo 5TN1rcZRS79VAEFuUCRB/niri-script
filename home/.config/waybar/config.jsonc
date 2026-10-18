@@ -1,10 +1,7 @@
 // The bar, in dwm's layout: workspaces and the focused window's title on the left, the tray and
-// the niri-status line on the right, floating a few pixels off the screen edges. Colors are in style.css.
+// the niri-status line on the right. Colors are in style.css.
 {
     "position": "top",
-    "margin-top": 5,
-    "margin-left": 8,
-    "margin-right": 8,
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-right": ["tray", "custom/status"],
 
