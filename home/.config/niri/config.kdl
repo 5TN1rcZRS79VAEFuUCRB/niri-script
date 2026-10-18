@@ -72,6 +72,11 @@ spawn-at-startup "niri-steam-overlay"
 // ~/.bash_profile starts niri again, which powers the monitors straight back off (niri-idle-restart).
 spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && touch \"$XDG_RUNTIME_DIR/niri-idle-restart\" && niri msg action quit --skip-confirmation'"
 spawn-sh-at-startup "rm \"$XDG_RUNTIME_DIR/niri-idle-restart\" 2>/dev/null && niri msg action power-off-monitors"
+// Laptop lid: screen off when closed, suspend after 5 minutes closed; see ~/.local/bin/niri-lid.
+switch-events {
+    lid-close { spawn "niri-lid" "close"; }
+    lid-open { spawn "niri-lid" "open"; }
+}
 
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
