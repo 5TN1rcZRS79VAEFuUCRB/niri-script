@@ -202,11 +202,14 @@ a PNG in `~/Pictures/Screenshots/` and copied to the clipboard, so you can paste
 
 ## Idle screen-off
 
-After 10 minutes idle `swayidle` powers the monitors off; any key or mouse movement wakes them. Video
-players that ask the desktop to stay awake are honoured. The X11 version of this setup only dimmed the
-picture to black instead, because waking an NVIDIA DisplayPort monitor from X's DPMS sleep could leave
-it without a picture; under niri that has not happened. To change the timeout, edit the `swayidle` line
-in `~/.config/niri/config.kdl`.
+After 10 minutes idle `swayidle` powers the monitors off (real DPMS sleep); any key or mouse movement
+wakes them. Video players that ask the desktop to stay awake are honoured. To change the timeout, edit
+the `swayidle` line in `~/.config/niri/config.kdl`; `niri msg action power-off-monitors` tries it by hand.
+
+The X11 version of this setup never let the monitors sleep, only dimmed them to black: waking a Samsung
+Odyssey G8 at 4K 240 Hz (compressed DSC over DisplayPort) on NVIDIA from X's DPMS sleep could leave it
+with no picture until a reboot. Under niri the same monitor and GPU (RTX 4080, `nvidia-open` 615.78)
+wakes with the picture back after a 5-minute sleep.
 
 ## Not included on purpose
 
