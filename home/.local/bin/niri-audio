@@ -10,11 +10,9 @@
 
 STEP=5
 
+# The bar's volume block (custom/audio in ~/.config/waybar/config.jsonc) redraws on SIGRTMIN+9.
 refresh_bar() {
-	local pid
-	pid="$(cat "${XDG_RUNTIME_DIR:-/tmp}/niri-status.pid" 2>/dev/null)" || return 0
-	# Only signal the bar script itself: a stale pid file could name an unrelated process now (USR1 kills by default).
-	[ -n "$pid" ] && grep -qa niri-status "/proc/$pid/cmdline" 2>/dev/null && kill -USR1 "$pid" 2>/dev/null
+	pkill -RTMIN+9 -x waybar
 	return 0
 }
 

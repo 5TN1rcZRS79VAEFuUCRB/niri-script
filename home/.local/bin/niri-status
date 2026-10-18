@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
 #
-# Status line: CPU/GPU usage, CPU/GPU temp, RAM usage, volume, clock.
-# Prints one line a second; waybar shows the latest on the right of the bar (custom/status in
-# ~/.config/waybar/config.jsonc).
+# Text for two of the bar's blocks (~/.config/waybar/config.jsonc; volume is `niri-audio status` and
+# the clock is waybar's own):
 #
-# The clock ticks every second; the heavier stats (CPU/GPU/RAM) are sampled
-# in the background every 2s and cached, so the clock never waits on them.
+#   niri-status todo    next assignment, points and streak from niri-todo, or the running focus/break
+#                       countdown. Prints once; waybar runs it every second and on SIGRTMIN+8.
+#   niri-status         CPU/GPU usage and temp, RAM and battery: a new line every 2 s for as long as
+#                       the bar runs.
+
+RUN="${XDG_RUNTIME_DIR:-$HOME/.cache}"
+
+if [ "$1" = todo ]; then
+	hw=""; read -r hw 2>/dev/null < "$RUN/niri-todo-bar"
+	# A running focus or break timer replaces the next-assignment text: "<icon> 7:32 <task>".
+	fend=0; read -r fend ficon ftext 2>/dev/null < "$RUN/niri-todo-focus"
+	if [ "${fend:-0}" -gt "$EPOCHSECONDS" ] 2>/dev/null; then
+		left=$((fend - EPOCHSECONDS))
+		printf -v hw '%s %d:%02d %s' "$ficon" $((left / 60)) $((left % 60)) "$ftext"
+	fi
+	printf '%s\n' "$hw"
+	exit
+fi
 
 # Not a fixed name in world-writable /tmp: another local user could pre-create it as a symlink.
-# Only one bar at a time: stop a copy left over from an earlier start or session.
-PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/niri-status.pid"
+# Only one at a time: stop a copy left over from an earlier start or session.
+PIDFILE="$RUN/niri-status.pid"
 [ -r "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null
-
-CACHE="${XDG_RUNTIME_DIR:-$HOME/.cache}/niri-status-cache"
-mkdir -p "$(dirname "$CACHE")"
+echo $$ > "$PIDFILE"
 
 cpu_usage() {
 	local a b c i1 i2 t1 t2
@@ -40,7 +53,7 @@ ram_usage() {
 # GPU load and temperature (NVIDIA only; nothing is shown without nvidia-smi). One long-lived
 # nvidia-smi prints a sample every 2 s and we read the latest line. Starting a new nvidia-smi
 # twice a second was heavy and clashed with monitor sleep/wake, so do not go back to that.
-GPU_FILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/niri-status-gpu"
+GPU_FILE="$RUN/niri-status-gpu"
 rm -f "$GPU_FILE" "$GPU_FILE.tmp"
 GPU_READER=
 if command -v nvidia-smi >/dev/null; then
@@ -75,51 +88,19 @@ battery_text() {
 	else echo "$icon ${cap}%"; fi
 }
 
-sampler() {
-	while true; do
-		cpu="$(cpu_usage)"
-		ctemp="$(cpu_temp)"
-		ram="$(ram_usage)"
-		gpu="$(cat "$GPU_FILE" 2>/dev/null)"
-		bat="$(battery_text)"
-		echo "${cpu}|${ctemp}|${ram}|${gpu}|${bat}" > "$CACHE.tmp"
-		mv "$CACHE.tmp" "$CACHE"
-	done
-}
-
-sampler &
-SAMPLER=$!
-trap 'kill $SAMPLER $GPU_READER 2>/dev/null; pkill -P $$ nvidia-smi 2>/dev/null' EXIT
+trap 'kill $GPU_READER 2>/dev/null; pkill -P $$ nvidia-smi 2>/dev/null' EXIT
 trap 'exit' TERM PIPE  # so a kill, or waybar going away, runs the EXIT cleanup above
 
-# niri-audio sends USR1 after a volume/device change so the bar redraws
-# immediately instead of waiting out the one-second sleep below.
-echo $$ > "$PIDFILE"
-
-# Next assignment, points and the focus countdown, written by niri-todo.
-TODO_BAR="${XDG_RUNTIME_DIR:-$HOME/.cache}/niri-todo-bar"
-TODO_FOCUS="${XDG_RUNTIME_DIR:-$HOME/.cache}/niri-todo-focus"
-trap : USR1
-
 while true; do
-	IFS='|' read -r cpu ctemp ram gpu bat < "$CACHE" 2>/dev/null
-	IFS=',' read -r gpu_util gpu_temp <<< "$gpu"
-	clock="$(date '+%a %-I:%M %p')"
-	vol="$("$HOME/.local/bin/niri-audio" status 2>/dev/null)"
+	cpu="$(cpu_usage)"
+	ctemp="$(cpu_temp)"
+	IFS=',' read -r gpu_util gpu_temp 2>/dev/null < "$GPU_FILE" || gpu_util=
+	bat="$(battery_text)"
 
 	# CPU temp and the GPU block are left out when the hardware has no sensor for them.
-	stats="  ${cpu:-0}%"
+	stats=" ${cpu}%"
 	[ -n "$ctemp" ] && stats+=" ${ctemp}°"
-	[ -n "$gpu_util" ] && stats+="   󰢮 ${gpu_util}% ${gpu_temp}°"
-
-	hw=""; read -r hw < "$TODO_BAR" 2>/dev/null
-	# A running focus or break timer replaces the next-assignment text: "<icon> 7:32 <task>".
-	fend=0; read -r fend ficon ftext < "$TODO_FOCUS" 2>/dev/null
-	if [ "${fend:-0}" -gt "$EPOCHSECONDS" ] 2>/dev/null; then
-		left=$((fend - EPOCHSECONDS))
-		printf -v hw '%s %d:%02d %s' "$ficon" $((left / 60)) $((left % 60)) "$ftext"
-	fi
-
-	printf '%s\n' "${hw:+$hw   }${stats}    ${ram:-?}${bat:+   $bat}   ${vol:- ?}   ${clock}"
-	sleep 1 & wait $!
+	[ -n "$gpu_util" ] && stats+="  󰢮 ${gpu_util}% ${gpu_temp}°"
+	printf '%s\n' "${stats}   $(ram_usage)${bat:+  $bat}"
+	sleep 1.5 & wait $!
 done

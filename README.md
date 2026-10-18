@@ -139,7 +139,7 @@ switch by choosing one.
 
 ## School assignments and to-dos
 
-`niri-todo` puts the next Canvas or Schoology assignment, `todo.txt` task or today's workout at the left of the status text (title and
+`niri-todo` puts the next Canvas or Schoology assignment, `todo.txt` task or today's workout in its own block on the bar (title and
 time left, points and a streak of days in a row with something turned in on time or a finished focus
 session, where every 7 active days earn a streak freeze that saves a missed day; never a count of late work) and sends reminders 3 days, 1 day and 3 hours before
 each due date, plus a summary every morning. `Mod+T` opens a dmenu list: start a 10-minute focus session

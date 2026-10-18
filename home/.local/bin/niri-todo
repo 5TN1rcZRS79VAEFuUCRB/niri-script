@@ -72,9 +72,12 @@ EARLY, EARLY_BONUS = 86400, 5  # turned in this long before it's due: bonus poin
 SURPRISE = 0.25  # chance a completion pays double, fixed per task so every machine agrees
 LEVEL = 100  # points per level
 FREEZE_EVERY, MAX_FREEZES = 7, 2  # active days that earn a streak freeze, and how many can be banked
-# Bar icons (Symbols Nerd Font): graduation cap, warning, coffee, star, flame
+# Bar and menu icons (Symbols Nerd Font): graduation cap, warning, coffee, star, flame
 TIMER = "󰔛"
 CAP, WARN, COFFEE, STAR, FIRE = "", "", "󰅶", "", "󰈸"
+# Menu icons: timer +, timer off, pause, check, sync; and one per source (cards for Anki, weightlifter, checkbox for todo.txt)
+MORE, TIMER_OFF, PAUSE, CHECK, SYNC = "󱫣", "󰔞", "󰏤", "󰄬", "󰓦"
+SOURCE_ICON = {"canvas": CAP, "schoology": CAP, "todo": "󰄱", "anki": "󰘹", "workout": "󱅝"}
 PRIORITY = {"canvas": 1, "schoology": 2, "todo": 2, "anki": 3, "workout": 4}  # breaks ties on the same day
 MANUAL = ("schoology", "todo", "workout")  # nothing reports these done: they're checked off from the menu
 LATE_FIRST = 2 * 86400  # nothing due within this long: late work moves to the top
@@ -538,14 +541,14 @@ def bar_text(tasks, errors, s, now):
     items = todo(tasks, s, now)
     free = break_until(items, now)
     if free and not errors:
-        return f"{COFFEE} free until {time.strftime('%a %-m/%-d', time.localtime(free))}   {STAR} {total(s)} {FIRE} {streak(s)}"
+        return f"{COFFEE} free until {time.strftime('%a %-m/%-d', time.localtime(free))}  {STAR} {total(s)} {FIRE} {streak(s)}"
     if items:
         head = f"{short(items[0]['title'])} ({left(items[0]['due'] - now)})"
     else:
         head = "run niri-todo sync" if errors and not tasks else "all caught up"
     parts = [(f"{WARN} " if errors else f"{CAP} ") + head]
     parts.append(f"{STAR} {total(s)} {FIRE} {streak(s)}")
-    return "   ".join(parts)
+    return "  ".join(parts)
 
 
 def notify(title, body="", urgent=False, tag=None):
@@ -662,12 +665,9 @@ def daemon():
 
 
 def redraw_bar():
-    """niri-status redraws right away on SIGUSR1 instead of on its next one-second tick."""
-    try:
-        with open(f"{RUN}/niri-status.pid") as f:
-            os.kill(int(f.read()), signal.SIGUSR1)
-    except (OSError, ValueError):
-        pass
+    """The bar's todo block (custom/todo in ~/.config/waybar/config.jsonc) redraws right away on
+    SIGRTMIN+8 instead of on its next one-second tick."""
+    subprocess.run(["pkill", "-RTMIN+8", "-x", "waybar"])
 
 
 # ---- menu ----
@@ -785,19 +785,21 @@ def run_menu():
     rows = []
     first = next((t for t in items if t["source"] != "workout"), None)  # workouts get no focus timer
     if again and not focus_end():
-        rows += [(f"10 more minutes: {again['title']}", ("more", again)), ("5-minute break", ("rest", again)),
-                 ("Stop for now (not finished)", ("pause", again))]
+        rows += [(f"{MORE}  10 more minutes: {again['title']}", ("more", again)),
+                 (f"{COFFEE}  5-minute break", ("rest", again)), (f"{PAUSE}  Stop for now (not finished)", ("pause", again))]
     if focus_end(TIMER) > now:
-        rows.append(("Finished it", ("finish", None)))
+        rows.append((f"{CHECK}  Finished it", ("finish", None)))
     if focus_end() > now:
-        rows.append(("Stop timer", ("stop", None)))
+        rows.append((f"{TIMER_OFF}  Stop timer", ("stop", None)))
     elif first and not again:
-        rows.append((f"{TIMER} Start 10-min focus: {first['title']}", ("focus", first)))
-    # Columns: time left, course, title.
+        rows.append((f"{TIMER}  Start 10-min focus: {first['title']}", ("focus", first)))
+    # Columns: source icon, time left, title (after the course for Canvas ones; Schoology's "course" is just Schoology).
     due = [left(t["due"] - now, 1) for t in items]
-    dw, cw = max(map(len, due), default=0), max((len(t["course"]) for t in items), default=0)
-    rows += [(f"{d:>{dw}}  {t['course']:<{cw}}  {t['title']}", ("task", t)) for d, t in zip(due, items)]
-    rows.append(("Sync now", ("sync", None)))
+    dw = max(map(len, due), default=0)
+    rows += [(f"{SOURCE_ICON[t['source']]}  {d:>{dw}}  "
+              f"{t['course'] + ' · ' if t['course'] and t['source'] == 'canvas' else ''}{t['title']}", ("task", t))
+             for d, t in zip(due, items)]
+    rows.append((f"{SYNC}  Sync now", ("sync", None)))
     act, t = dmenu(rows, prompt) or (None, None)
     if act == "task":
         sub = [("Start 10-min focus", ("focus", t))]
