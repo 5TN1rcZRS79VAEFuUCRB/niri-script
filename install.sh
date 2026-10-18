@@ -169,7 +169,7 @@ if command -v firefox >/dev/null; then
 		echo "Installed user.js into $FF_PROFILE (restart Firefox to apply)"
 	else
 		warn "could not find/create a Firefox profile. Start Firefox once, close it, then run:"
-		warn "  ./install.sh --no-packages --no-build"
+		warn "  ./install.sh --no-packages"
 	fi
 	# Extensions (uBlock Origin, Violentmonkey) come from a system-wide Firefox policy, so they are
 	# installed automatically the next time Firefox starts. Needs root because it lives in /etc.
@@ -225,9 +225,7 @@ else
 	warn "cups is not installed; skipping the printer"
 fi
 
-# ---------------------------------------------------------------- Syncthing (KeePassXC sync)
-# Only the service is set up here. Device keys and the folder/device pairing live in
-# ~/.local/state/syncthing and are never in this repo; pair devices at http://127.0.0.1:8384.
+# ---------------------------------------------------------------- Tailscale + ssh arch-server
 say "Tailscale and ssh arch-server"
 # ~/.ssh/config stays this machine's own file; the repo's host entries come in through an Include.
 SSH_INCLUDE='Include ~/.ssh/config.d/*.conf'
@@ -240,6 +238,9 @@ if command -v tailscale >/dev/null; then
 	tailscale status >/dev/null 2>&1 || warn "Tailscale is not logged in yet; run once: sudo tailscale up"
 fi
 
+# ---------------------------------------------------------------- Syncthing (KeePassXC sync)
+# Only the service is set up here. Device keys and the folder/device pairing live in
+# ~/.local/state/syncthing and are never in this repo; pair devices at http://127.0.0.1:8384.
 say "Syncthing: start now and at every login"
 if command -v syncthing >/dev/null; then
 	systemctl --user enable --now syncthing \
@@ -282,7 +283,7 @@ if command -v claude >/dev/null; then
 			&& npm install -g --prefix "$HOME/.local" @caveman-ai/cli \
 			&& "$HOME/.local/bin/caveman" setup --install \
 			&& "$HOME/.local/bin/caveman" enable claude
-	} || warn "Claude add-ons failed (often a download hiccup); rerun: ./install.sh --no-packages --no-build"
+	} || warn "Claude add-ons failed (often a download hiccup); rerun: ./install.sh --no-packages"
 else
 	warn "Claude Code is not installed; skipping. Install it (curl -fsSL https://claude.ai/install.sh | bash), then rerun"
 fi

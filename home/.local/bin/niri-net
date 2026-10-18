@@ -159,7 +159,7 @@ def dmenu(lines, prompt):
 
 
 def message(text):
-    """One-line notice (no notification daemon runs here). Enter or Esc dismisses it."""
+    """One-line notice, shown as a one-row dmenu. Enter or Esc dismisses it."""
     dmenu([clean(text)[:150]], "Network")
 
 
