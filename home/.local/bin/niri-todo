@@ -145,7 +145,7 @@ def merge(s, other):
     for key in ("hidden", "reminded", "focus", "days"):
         s[key] += [x for x in other[key] if x not in s[key]]
     s["days"].sort()
-    for key in ("summary_day", "anki_day", "token_warned"):  # ISO dates: the later one
+    for key in ("summary_day", "token_warned"):  # ISO dates: the later one
         if other.get(key, "") > s.get(key, ""):
             s[key] = other[key]
     if "since" in other:
@@ -352,11 +352,12 @@ def update_anki(tasks, errors):
         errors.append(f"anki: {e}")
         cards = None
     # Anki is a task for today only: finishing today's cards (due goes from some to none) scores it.
-    today, anki_id = date.today().isoformat(), f"anki:{date.today().isoformat()}"
+    # "Some" is this machine's own last count (tasks.json isn't synced), so a machine whose collection
+    # never had cards today, like one never signed in to AnkiWeb, can't score it.
+    anki_id = f"anki:{date.today().isoformat()}"
+    listed = any(t["id"] == anki_id for t in load("tasks.json", {"tasks": []})["tasks"])
     with state() as s:
-        if cards:
-            s["anki_day"] = today
-        elif cards == 0 and s.get("anki_day") == today and anki_id not in s["scores"]:
+        if cards == 0 and listed and anki_id not in s["scores"]:
             award(s, {"id": anki_id, "title": "Anki reviews done", "due": tonight()}, "done")
         anki_done = anki_id in s["scores"]
         focusing_anki = s.get("focus_task") == anki_id
@@ -926,6 +927,22 @@ def selftest():
         assert len(sent) == 4, sent
     finally:
         notify = real_notify
+    global load, write, anki_due
+    real_load, real_write, real_anki_due, files = load, write, anki_due, {}
+    load = lambda name, default: files.get(name, default)
+    write = lambda path, text: files.__setitem__(os.path.basename(path), json.loads(text))
+    state, notify, mem = contextmanager(lambda: (yield mem)), lambda *a, **k: None, defaults({})
+    try:
+        anki_due = lambda: 0
+        update_anki([], [])  # a collection with nothing due all day (never synced) scores nothing
+        assert not mem["scores"]
+        anki_due = lambda: 5
+        update_anki([], [])
+        anki_due = lambda: 0
+        update_anki([], [])  # some to none on this machine: done
+        assert f"anki:{date.today().isoformat()}" in mem["scores"]
+    finally:
+        load, write, anki_due, state, notify = real_load, real_write, real_anki_due, real_state, real_notify
     hits = sum(random.Random(f"t{i}").random() < SURPRISE for i in range(1000))
     assert 200 < hits < 300  # about 1 in 4
     assert (left(-90000), left(7200), left(59)) == ("1d 1h late", "2h", "0m")
