@@ -20,7 +20,8 @@ layout {
         proportion 0.5
         proportion 0.66667
     }
-    default-column-width { proportion 0.5; }
+    // New windows open full width, like a lone window under dwm. Mod+R cycles the presets above.
+    default-column-width { proportion 1.0; }
     // dwm's colors: the focused window gets a light outline, the rest none.
     focus-ring {
         width 2

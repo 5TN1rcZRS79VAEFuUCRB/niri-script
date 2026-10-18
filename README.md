@@ -63,8 +63,8 @@ Packages are listed in `packages.txt`.
 
 `Mod` is the Super (Windows) key. `Mod+Shift+/` shows every key on screen.
 
-There are no numbered workspaces. Each window opens as a column on a strip that scrolls sideways,
-so nothing gets squeezed when you open more. Workspaces stack vertically, and there is always an
+There are no numbered workspaces. Each window opens full width as a column on a strip that scrolls
+sideways, so nothing gets squeezed when you open more; `Mod+R` narrows one to fit two or three side by side. Workspaces stack vertically, and there is always an
 empty one at the bottom: move a window down to it to start a new workspace, and an emptied
 workspace disappears. The dots on the left of the bar show them. Click one to go there.
 
