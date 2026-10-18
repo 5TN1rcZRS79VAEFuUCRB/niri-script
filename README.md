@@ -74,7 +74,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | Previous / next window | `Mod+A` / `Mod+D` (or `Mod+H` / `Mod+L`) |
 | Workspace above / below | `Mod+W` / `Mod+S` (or `Mod+K` / `Mod+J`, or `Mod`+scroll with a wheel or two fingers on the touchpad) |
 | Take the window along | add `Ctrl` (`Mod+Ctrl+W/A/S/D`); below the last workspace makes a new one |
-| Overview of every workspace (pick a window with the mouse) | `Mod+Tab`, or push the mouse into the top-left corner |
+| Overview of every workspace (pick a window with the mouse) | `Mod+Tab` |
 | Column width: 1/3, 1/2, 2/3 / full / 10% steps | `Mod+R` / `Mod+F` / `Mod+-` and `Mod+=` |
 | Fullscreen / float | `Mod+Shift+F` / `Mod+V` |
 | Stack a window into the next column, or pull it out | `Mod+[` / `Mod+]` |

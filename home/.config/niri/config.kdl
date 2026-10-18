@@ -37,6 +37,13 @@ hotkey-overlay {
     skip-at-startup
 }
 
+// No overview when the mouse hits the top-left corner; Mod+Tab opens it.
+gestures {
+    hot-corners {
+        off
+    }
+}
+
 // Every screenshot is also copied to the clipboard.
 screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d_%H-%M-%S.png"
 
@@ -68,8 +75,7 @@ binds {
     Mod+P { spawn "dmenu" "run"; }
     Mod+Shift+C repeat=false { close-window; }
     Mod+Shift+Q { quit; }
-    // Every workspace at a glance; pick a window with the mouse or the keys below. Also the
-    // top-left screen corner.
+    // Every workspace at a glance; pick a window with the mouse or the keys below.
     Mod+Tab repeat=false { toggle-overview; }
 
     // WASD (one hand, the other on the touchpad) and HJKL do the same: left/right is the previous/next
