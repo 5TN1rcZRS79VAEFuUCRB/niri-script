@@ -778,7 +778,8 @@ def run_menu():
     with state() as s:
         items = todo(tasks, s, now)
         (run, freezes), (lvl, to_next) = streak_info(s), level_info(total(s))
-        prompt = f"{total(s)} pts · Lv {lvl} ({to_next} to go) · {run}-day streak" + (f" · {freezes} freeze" if freezes else "")
+        prompt = (f"{STAR} {total(s)} pts · Lv {lvl} ({to_next} to go) · {FIRE} {run}-day streak"
+                  + (f" · {freezes} freeze" if freezes else ""))
         since = s.get("since", now)
         again = next_session(tasks, s, now)
     rows = []
@@ -791,9 +792,11 @@ def run_menu():
     if focus_end() > now:
         rows.append(("Stop timer", ("stop", None)))
     elif first and not again:
-        rows.append((f">> Start 10-min focus: {first['title']}", ("focus", first)))
-    rows += [(f"{left(t['due'] - now, 1):>8}  {t['course'] + ': ' if t['course'] else ''}{t['title']}", ("task", t))
-             for t in items]
+        rows.append((f"{TIMER} Start 10-min focus: {first['title']}", ("focus", first)))
+    # Columns: time left, course, title.
+    due = [left(t["due"] - now, 1) for t in items]
+    dw, cw = max(map(len, due), default=0), max((len(t["course"]) for t in items), default=0)
+    rows += [(f"{d:>{dw}}  {t['course']:<{cw}}  {t['title']}", ("task", t)) for d, t in zip(due, items)]
     rows.append(("Sync now", ("sync", None)))
     act, t = dmenu(rows, prompt) or (None, None)
     if act == "task":
