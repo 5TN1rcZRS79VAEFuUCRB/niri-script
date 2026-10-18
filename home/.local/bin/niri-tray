@@ -5,7 +5,7 @@ niri-tray: the tray apps (Discord, Steam, ...) from dmenu, for when clicking the
 Apps announce their tray icon over D-Bus (the StatusNotifier protocol) to a "watcher" service;
 waybar's tray module runs it. This lists whatever has registered there.
 
-  niri-tray menu     dmenu list of tray apps; choosing one restores it, "quit: <app>" closes it
+  niri-tray          dmenu list of tray apps; choosing one restores it, "quit: <app>" closes it
 """
 import os
 import re
@@ -139,14 +139,5 @@ def run_menu():
             quit_app(bus_name, path)
 
 
-def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode == "menu":
-        run_menu()
-    else:
-        print(__doc__, file=sys.stderr)
-        sys.exit(2)
-
-
 if __name__ == "__main__":
-    main()
+    run_menu()

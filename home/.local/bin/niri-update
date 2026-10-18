@@ -15,6 +15,4 @@ git pull --ff-only -q                       # refuses (and notifies) if this clo
 [ "$(git rev-parse HEAD)" = "$(cat "$HOME/.local/state/niri-script-installed" 2>/dev/null)" ] && exit 0
 
 ./install.sh
-# dwm-restart-session: login shells started before the dwm- to niri- rename still wait for that name.
-# ponytail: drop it once every machine has logged in again since the rename.
-touch "$XDG_RUNTIME_DIR/niri-restart-session" "$XDG_RUNTIME_DIR/dwm-restart-session"
+touch "$XDG_RUNTIME_DIR/niri-restart-session"

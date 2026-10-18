@@ -8,7 +8,6 @@ Choosing a Wi-Fi network connects to it. A network you have not used before that
 password opens a small terminal running `nmcli --ask`, so the password is never shown on
 screen. Bound to Mod+N in ~/.config/niri/config.kdl.
 """
-import shlex
 import shutil
 import subprocess
 import time
@@ -165,11 +164,7 @@ def message(text):
 
 
 def terminal(*cmd):
-    term = shutil.which("foot")
-    if term:
-        subprocess.Popen([term, "-e", *cmd])
-    else:
-        message("No terminal found. Run in a terminal: " + " ".join(shlex.quote(c) for c in cmd))
+    subprocess.Popen(["foot", "-e", *cmd])
 
 
 def connect(ssid, secured, uuid, in_use):

@@ -112,8 +112,8 @@ def state():
     with open(f"{DATA}/lock", "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         s = load("state.json", {})
-        before = json.dumps(s)  # taken before migrate, so a migrated file gets saved
-        migrate(s)
+        before = json.dumps(s)
+        defaults(s)
         # Two machines changed state.json at once: Syncthing kept one and saved the other as a
         # conflict copy. Fold the copy back in so nothing done on either machine is lost.
         merged = []
@@ -131,21 +131,15 @@ def state():
             os.remove(f)
 
 
-def migrate(s):
-    """Fill in defaults. focus_pts (a running total) became focus (one entry per finished session),
-    which two machines can merge; the old total turns into numbered entries, the same on every machine."""
+def defaults(s):
     for k, v in {"scores": {}, "hidden": [], "reminded": [], "focus": [], "days": []}.items():
         s.setdefault(k, v)
-    legacy = [f"legacy-{i}" for i in range(1, s.pop("focus_pts", 0) // 2 + 1)]
-    for v in s["scores"].values():  # missing work used to cost 5 points; it costs nothing now
-        v["pts"] = max(v["pts"], 0)
-    s["focus"] += [x for x in legacy if x not in s["focus"]]
     return s
 
 
 def merge(s, other):
     """Fold another machine's copy into s. Everything only grows, so the union keeps both sides' work."""
-    other = migrate(other)
+    other = defaults(other)
     for k, v in other["scores"].items():
         s["scores"].setdefault(k, v)
     for key in ("hidden", "reminded", "focus", "days"):
@@ -388,9 +382,11 @@ def anki_running():
 
 # ---- points ----
 
-def session_id():
-    """One finished focus session: when, and on which machine, so two machines' sessions never collide."""
-    return f"{datetime.now().isoformat(timespec='seconds')} {os.uname().nodename}"
+def log_session(s):
+    """One finished focus session (+2), keyed by when and on which machine, so two machines' sessions never collide."""
+    s["focus"].append(f"{datetime.now().isoformat(timespec='seconds')} {os.uname().nodename}")
+    active(s)
+    level_up(s, total(s) - 2)
 
 
 def total(s):
@@ -712,10 +708,8 @@ def focus(t, reopen=True):
     if not timer(FOCUS_SECS, TIMER, short(t["title"])):
         return
     with state() as s:
-        s["focus"].append(session_id())
+        log_session(s)
         s["focus_next"] = time.time()
-        active(s)
-        level_up(s, total(s) - 2)
         pts = total(s)
     tick()
     notify(f"Session done: +2 pts ({pts})", "Mod+t: 10 more minutes or a 5-minute break", urgent=True)
@@ -752,9 +746,7 @@ def finish():
     os.remove(FOCUS)  # the timer sees it gone and stops without asking what's next
     tasks = load("tasks.json", {"tasks": []})["tasks"]
     with state() as s:
-        s["focus"].append(session_id())
-        active(s)
-        level_up(s, total(s) - 2)
+        log_session(s)
         t = next((x for x in tasks if x["id"] == s.get("focus_task")), None)
         notify("Finished early: +2 pts", f"{total(s)} pts")
     if t and t["source"] in MANUAL:
@@ -894,14 +886,14 @@ def selftest():
     s["scores"] = {"a": {"pts": 10, "due": 3, "on_time": True}, "b": {"pts": 3, "due": 1, "on_time": False},
                    "c": {"pts": 10, "due": 2, "on_time": True}}
     assert total(s) == 25
-    a = migrate({"focus_pts": 6, "scores": {"x": {"pts": 10, "due": 1, "on_time": True}}, "days": ["2026-10-04"]})
-    b = migrate({"focus_pts": 4, "hidden": ["h"], "days": ["2026-10-03"], "since": 5.0})
+    a = defaults({"focus": ["f1", "f2"], "scores": {"x": {"pts": 10, "due": 1, "on_time": True}}, "days": ["2026-10-04"]})
+    b = defaults({"focus": ["f1"], "hidden": ["h"], "days": ["2026-10-03"], "since": 5.0})
     a["since"] = 9.0
     b["focus"].append("2026-10-05T10:00:00 laptop")
-    merge(a, b)  # sessions numbered the same on both sides count once; new ones add up
+    merge(a, b)  # sessions on both sides count once; new ones add up
     assert (a["focus"], a["hidden"], a["days"], a["since"]) == (
-        ["legacy-1", "legacy-2", "legacy-3", "2026-10-05T10:00:00 laptop"], ["h"], ["2026-10-03", "2026-10-04"], 5.0)
-    assert total(a) == 18
+        ["f1", "f2", "2026-10-05T10:00:00 laptop"], ["h"], ["2026-10-03", "2026-10-04"], 5.0)
+    assert total(a) == 16
     d = date(2026, 10, 7)
     s["days"] = ["2026-10-03", "2026-10-05", "2026-10-06"]
     assert streak(s, d) == 2  # today not done yet: yesterday's run still stands
@@ -913,7 +905,6 @@ def selftest():
     s["days"].remove("2026-10-09")
     assert streak_info(s, date(2026, 10, 10)) == (0, 0)  # two missed days, one freeze: the streak ends
     assert level_info(0) == (1, 100) and level_info(250) == (3, 50)
-    assert migrate({"scores": {"m": {"pts": -5, "due": 1, "on_time": False}}})["scores"]["m"]["pts"] == 0
     mem, notify = {"scores": {}, "days": [], "focus": []}, lambda *a, **k: None
     try:
         early = {"id": "early-task", "title": "x", "due": time.time() + 3 * 86400}
@@ -947,17 +938,7 @@ def selftest():
     print("ok")
 
 
-def rename_old():
-    """dwm-school became dwm-todo: move its folder over once (Syncthing's folder path needs the same change)."""
-    old = os.path.join(os.path.dirname(DATA), "dwm-school")
-    if os.path.isdir(old) and not os.path.exists(DATA):
-        os.rename(old, DATA)
-        if os.path.exists(f"{DATA}/dwm-school.conf"):
-            os.rename(f"{DATA}/dwm-school.conf", CONF)
-
-
 def main():
-    rename_old()
     cmds = {"daemon": daemon, "menu": run_menu, "selftest": selftest}
     if sys.argv[1:] == ["sync"]:
         errors = sync()

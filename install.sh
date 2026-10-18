@@ -7,16 +7,6 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
-# This repo used to be arch-dwm-desktop: a clone still in a folder of that name moves to ~/niri-script and
-# pulls from the new URL (GitHub redirects the old one, but only for as long as nothing else takes the name).
-OLD_NAME=arch-dwm-desktop
-if [ "$PWD" = "$HOME/$OLD_NAME" ] && [ ! -e "$HOME/niri-script" ]; then
-	mv "$PWD" "$HOME/niri-script"
-	cd "$HOME/niri-script"
-fi
-url="$(git remote get-url origin 2>/dev/null || true)"
-[[ $url != *"/$OLD_NAME"* ]] || git remote set-url origin "${url/\/$OLD_NAME/\/niri-script}"
-
 SCALE="${SCALE:-}"
 DO_PACKAGES=1
 WITH_STEAM=0
@@ -95,7 +85,6 @@ if ! sudo test -e "$SUDOERS"; then
 	sudo visudo -cqf "$tmp" && sudo install -m440 "$tmp" "$SUDOERS"
 	rm -f "$tmp"
 fi
-sudo rm -f /etc/sudoers.d/10-dwm-update   # its name before the rename
 
 # ---------------------------------------------------------------- packages
 if [ "$DO_PACKAGES" -eq 1 ]; then
@@ -114,30 +103,12 @@ while IFS= read -r -d '' f; do
 	place "$f" "$HOME/${f#home/}"
 done < <(find home -type f -print0)
 
-# Files from the X11/dwm version of this setup that now get in the way (moved into the backup):
-# the old portals.conf forced the GTK portal, which cannot share the screen under niri.
-# The dwm- helpers and their timer and Anki add-on were renamed niri-: the old copies go too, or the old
-# timer would keep running the old updater.
-systemctl --user disable --now dwm-update.timer 2>/dev/null || true
-for rel in .config/xdg-desktop-portal/portals.conf .config/systemd/user/dwm-mouse.service \
-	.local/bin/dwm-blank .local/bin/dwm-shot .local/bin/keepassxc \
-	.local/bin/dwm-audio .local/bin/dwm-mouse .local/bin/dwm-net .local/bin/dwm-power .local/bin/dwm-status.sh \
-	.local/bin/dwm-todo .local/bin/dwm-tray .local/bin/dwm-update \
-	.config/systemd/user/dwm-update.service .config/systemd/user/dwm-update.timer \
-	.local/share/Anki2/addons21/dwm_todo; do
-	[ -e "$HOME/$rel" ] || continue
-	mkdir -p "$BACKUP/$(dirname "$rel")"
-	mv "$HOME/$rel" "$BACKUP/$rel"
-	REPLACED+=("$rel")
-done
-
 # The mouse speed saved with Mod+Shift+M goes into niri's config (mouse.kdl).
-[ ! -e "$HOME/.config/dwm-mouse" ] || [ -e "$HOME/.config/niri-mouse" ] || mv "$HOME/.config/dwm-mouse" "$HOME/.config/niri-mouse"
 "$HOME/.local/bin/niri-mouse" apply
 
 # The todo daemon outlives niri restarts (niri starts apps in scopes of their own), so a running one
 # would keep the old code: restart it. niri's own start of it at the next login then finds it running.
-todo_daemon='/\.local/bin/(dwm|niri)-todo daemon'
+todo_daemon='/\.local/bin/niri-todo daemon'
 if pkill -f "$todo_daemon"; then
 	for _ in $(seq 50); do pgrep -f "$todo_daemon" >/dev/null || break; sleep 0.1; done
 	systemd-run --user --collect -q "$HOME/.local/bin/niri-todo" daemon || warn "could not restart niri-todo; run: niri-todo daemon &"
@@ -214,11 +185,9 @@ else
 	warn "firefox is not installed; skipping its settings"
 fi
 
-# The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer mouse's DPI without root. The 90- rule
-# from the X11 version re-applied mouse settings on replug; niri does that itself now.
+# The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer mouse's DPI without root.
 say "udev: Razer DPI access"
 sudo_place etc/udev/rules.d/70-niri-mouse-dpi.rules /etc/udev/rules.d/70-niri-mouse-dpi.rules
-sudo rm -f /etc/udev/rules.d/90-dwm-mouse.rules /etc/udev/rules.d/70-dwm-mouse-dpi.rules   # older names
 sudo udevadm control --reload || warn "could not reload udev rules; they take effect after a reboot"
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
@@ -283,7 +252,6 @@ fi
 # niri-update.timer pulls this clone every 5 minutes and re-runs this installer on new commits.
 say "Auto-update: pull and reinstall on new commits"
 ln -sfn "$PWD" "$HOME/.local/share/niri-script"
-[ ! -L "$HOME/.local/share/$OLD_NAME" ] || rm "$HOME/.local/share/$OLD_NAME"
 systemctl --user enable --now niri-update.timer \
 	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now niri-update.timer"
 
@@ -321,15 +289,9 @@ fi
 
 # ---------------------------------------------------------------- GTK dark preference (dconf)
 say "GTK/desktop dark preference"
-dconf_write() {
-	if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-		dconf write "$1" "$2"
-	else
-		dbus-run-session -- dconf write "$1" "$2"
-	fi
-}
 if command -v dconf >/dev/null; then
-	dconf_write /org/gnome/desktop/interface/color-scheme "'prefer-dark'" \
+	bus=(); [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ] || bus=(dbus-run-session --)  # a console or ssh has no session bus
+	"${bus[@]}" dconf write /org/gnome/desktop/interface/color-scheme "'prefer-dark'" \
 		|| warn "could not write the dark preference; run: gsettings set org.gnome.desktop.interface color-scheme prefer-dark"
 else
 	warn "dconf is not installed; skipping the desktop dark preference"
@@ -359,7 +321,6 @@ say "Done"
 # niri-update compares this with the pulled commit to know whether to install again.
 mkdir -p "$HOME/.local/state"
 git rev-parse HEAD > "$HOME/.local/state/niri-script-installed"
-rm -f "$HOME/.local/state/$OLD_NAME-installed"
 # Hand edits to these files are gone from the live copies; copy back into the repo any worth keeping.
 if [ ${#REPLACED[@]} -gt 0 ]; then
 	warn "these files differed from the repo and were replaced or removed (old copies in $BACKUP):"

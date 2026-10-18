@@ -19,7 +19,7 @@
     },
     // Right-click: the tray apps menu (Mod+Shift+T).
     "niri/window": {
-        "on-click-right": "niri-tray menu"
+        "on-click-right": "niri-tray"
     },
     "tray": { "spacing": 8 },
     // Next assignment, points and streak, or the focus timer (niri-status todo). niri-todo sends

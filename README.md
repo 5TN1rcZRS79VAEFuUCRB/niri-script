@@ -198,8 +198,6 @@ To keep points, marked-done work, the token and the config the same on several m
 `~/.local/share/dwm-todo` with Syncthing (folder ID `dwm-school`, kept from before the rename so existing machines still match) and put a `.stignore` in it with
 `tasks.json`, `lock`, `daemon.lock` and `*.tmp`, so each machine fetches its own assignment list. Before
 sharing to a machine that already ran `niri-todo`, delete its `state.json` so the empty one doesn't win.
-A machine that still has `~/.local/share/dwm-school` gets it moved to `dwm-todo` on the first run; point
-its Syncthing folder at the new path (`syncthing cli config folders dwm-school path set ~/.local/share/dwm-todo`).
 
 ## Screenshots
 
