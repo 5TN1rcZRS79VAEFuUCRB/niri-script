@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-dwm-net: choose which network to use, from dmenu (needs NetworkManager).
+niri-net: choose which network to use, from dmenu (needs NetworkManager).
 
-  dwm-net    pick a Wi-Fi network, a wired connection or an action
+  niri-net    pick a Wi-Fi network, a wired connection or an action
 
 Choosing a Wi-Fi network connects to it. A network you have not used before that needs a
 password opens a small terminal running `nmcli --ask`, so the password is never shown on

@@ -26,7 +26,7 @@ alsa-utils       # runs the UCM boot sequence at startup; without it the laptop 
 # --- laptop backlight (Fn brightness keys, bound in ~/.config/niri/config.kdl)
 brightnessctl
 
-# --- network picker (dwm-net, Mod+N); the laptop's battery and power profile need no package here
+# --- network picker (niri-net, Mod+N); the laptop's battery and power profile need no package here
 networkmanager
 wireless-regdb
 
@@ -41,11 +41,11 @@ nss-mdns
 cups
 gutenprint
 
-# --- notifications: dwm-todo reminders (notify-send + dunst) ---
+# --- notifications: niri-todo reminders (notify-send + dunst) ---
 dunst
 libnotify
 
-# --- dwm-todo: opens assignments in the browser ---
+# --- niri-todo: opens assignments in the browser ---
 xdg-utils
 
 # --- bar stats + helper scripts ---
@@ -65,7 +65,7 @@ qt6ct
 firefox
 keepassxc
 syncthing        # keeps the KeePassXC database in sync between machines
-anki             # flashcards; dwm-todo shows today's due cards (its add-on is in home/.local/share/Anki2)
+anki             # flashcards; niri-todo shows today's due cards (its add-on is in home/.local/share/Anki2)
 mpv              # plays the audio and video on Anki cards
 proton-vpn-gtk-app
 gnome-keyring    # Secret Service (D-Bus activated) where Proton VPN keeps its login

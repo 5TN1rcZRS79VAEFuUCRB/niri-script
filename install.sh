@@ -74,17 +74,18 @@ sudo_place() { # src dest
 }
 
 # ---------------------------------------------------------------- passwordless sudo
-# dwm-update re-runs this installer unattended when a commit is pushed, so its sudo calls cannot
+# niri-update re-runs this installer unattended when a commit is pushed, so its sudo calls cannot
 # ask for a password. This makes the user root-equivalent without one: anything running as this
-# user, and anyone who can push to the repo, gets root. Undo: sudo rm /etc/sudoers.d/10-dwm-update
-SUDOERS=/etc/sudoers.d/10-dwm-update
+# user, and anyone who can push to the repo, gets root. Undo: sudo rm /etc/sudoers.d/10-niri-update
+SUDOERS=/etc/sudoers.d/10-niri-update
 if ! sudo test -e "$SUDOERS"; then
-	say "Passwordless sudo for $(id -un) (lets dwm-update run this installer unattended)"
+	say "Passwordless sudo for $(id -un) (lets niri-update run this installer unattended)"
 	tmp="$(mktemp)"
 	echo "$(id -un) ALL=(ALL) NOPASSWD: ALL" > "$tmp"
 	sudo visudo -cqf "$tmp" && sudo install -m440 "$tmp" "$SUDOERS"
 	rm -f "$tmp"
 fi
+sudo rm -f /etc/sudoers.d/10-dwm-update   # its name before the rename
 
 # ---------------------------------------------------------------- packages
 if [ "$DO_PACKAGES" -eq 1 ]; then
@@ -105,8 +106,15 @@ done < <(find home -type f -print0)
 
 # Files from the X11/dwm version of this setup that now get in the way (moved into the backup):
 # the old portals.conf forced the GTK portal, which cannot share the screen under niri.
+# The dwm- helpers and their timer and Anki add-on were renamed niri-: the old copies go too, or the old
+# timer would keep running the old updater.
+systemctl --user disable --now dwm-update.timer 2>/dev/null || true
 for rel in .config/xdg-desktop-portal/portals.conf .config/systemd/user/dwm-mouse.service \
-	.local/bin/dwm-blank .local/bin/dwm-shot .local/bin/keepassxc; do
+	.local/bin/dwm-blank .local/bin/dwm-shot .local/bin/keepassxc \
+	.local/bin/dwm-audio .local/bin/dwm-mouse .local/bin/dwm-net .local/bin/dwm-power .local/bin/dwm-status.sh \
+	.local/bin/dwm-todo .local/bin/dwm-tray .local/bin/dwm-update \
+	.config/systemd/user/dwm-update.service .config/systemd/user/dwm-update.timer \
+	.local/share/Anki2/addons21/dwm_todo; do
 	[ -e "$HOME/$rel" ] || continue
 	mkdir -p "$BACKUP/$(dirname "$rel")"
 	mv "$HOME/$rel" "$BACKUP/$rel"
@@ -114,7 +122,16 @@ for rel in .config/xdg-desktop-portal/portals.conf .config/systemd/user/dwm-mous
 done
 
 # The mouse speed saved with Mod+Shift+M goes into niri's config (mouse.kdl).
-"$HOME/.local/bin/dwm-mouse" apply
+[ ! -e "$HOME/.config/dwm-mouse" ] || [ -e "$HOME/.config/niri-mouse" ] || mv "$HOME/.config/dwm-mouse" "$HOME/.config/niri-mouse"
+"$HOME/.local/bin/niri-mouse" apply
+
+# The todo daemon outlives niri restarts (niri starts apps in scopes of their own), so a running one
+# would keep the old code: restart it. niri's own start of it at the next login then finds it running.
+todo_daemon='/\.local/bin/(dwm|niri)-todo daemon'
+if pkill -f "$todo_daemon"; then
+	for _ in $(seq 50); do pgrep -f "$todo_daemon" >/dev/null || break; sleep 0.1; done
+	systemd-run --user --collect -q "$HOME/.local/bin/niri-todo" daemon || warn "could not restart niri-todo; run: niri-todo daemon &"
+fi
 
 # ---------------------------------------------------------------- display scaling + refresh rate
 # Monitors differ per machine, so their settings live in ~/.config/niri/local.kdl, not in the repo's
@@ -178,7 +195,7 @@ if command -v firefox >/dev/null; then
 	# The Always-visible userscript ships in this repo, but Violentmonkey keeps its scripts in its
 	# own storage, which a policy cannot seed, so it is imported by hand once (see the line printed).
 	sudo_place firefox/policies.json /etc/firefox/policies/policies.json
-	# Links opened from other programs (dwm-todo, chat apps) go to Firefox, not another installed browser.
+	# Links opened from other programs (niri-todo, chat apps) go to Firefox, not another installed browser.
 	{ xdg-settings set default-web-browser firefox.desktop && xdg-mime default firefox.desktop text/html; } \
 		|| warn "could not make Firefox the default browser; run: xdg-settings set default-web-browser firefox.desktop"
 	echo "Violentmonkey will auto-install; import the userscript once by opening this in Firefox:"
@@ -190,8 +207,8 @@ fi
 # The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer mouse's DPI without root. The 90- rule
 # from the X11 version re-applied mouse settings on replug; niri does that itself now.
 say "udev: Razer DPI access"
-sudo_place etc/udev/rules.d/70-dwm-mouse-dpi.rules /etc/udev/rules.d/70-dwm-mouse-dpi.rules
-[ ! -e /etc/udev/rules.d/90-dwm-mouse.rules ] || sudo rm /etc/udev/rules.d/90-dwm-mouse.rules
+sudo_place etc/udev/rules.d/70-niri-mouse-dpi.rules /etc/udev/rules.d/70-niri-mouse-dpi.rules
+sudo rm -f /etc/udev/rules.d/90-dwm-mouse.rules /etc/udev/rules.d/70-dwm-mouse-dpi.rules   # older names
 sudo udevadm control --reload || warn "could not reload udev rules; they take effect after a reboot"
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
@@ -253,11 +270,11 @@ else
 fi
 
 # ---------------------------------------------------------------- auto-update
-# dwm-update.timer pulls this clone every 5 minutes and re-runs this installer on new commits.
+# niri-update.timer pulls this clone every 5 minutes and re-runs this installer on new commits.
 say "Auto-update: pull and reinstall on new commits"
 ln -sfn "$PWD" "$HOME/.local/share/arch-dwm-desktop"
-systemctl --user enable --now dwm-update.timer \
-	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now dwm-update.timer"
+systemctl --user enable --now niri-update.timer \
+	|| warn "could not start the auto-update timer; after logging in run: systemctl --user enable --now niri-update.timer"
 
 # ---------------------------------------------------------------- git identity
 # GitHub noreply address, so commits work and push without exposing an email.
@@ -320,7 +337,7 @@ fi
 
 # ---------------------------------------------------------------- done
 say "Done"
-# dwm-update compares this with the pulled commit to know whether to install again.
+# niri-update compares this with the pulled commit to know whether to install again.
 mkdir -p "$HOME/.local/state"
 git rev-parse HEAD > "$HOME/.local/state/arch-dwm-desktop-installed"
 # Hand edits to these files are gone from the live copies; copy back into the repo any worth keeping.

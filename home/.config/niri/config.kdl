@@ -55,14 +55,14 @@ environment {
     SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS "0"
 }
 
-// The bar: workspaces, window title, tray and the dwm-status.sh line (~/.config/waybar/).
+// The bar: workspaces, window title, tray and the niri-status line (~/.config/waybar/).
 spawn-at-startup "waybar"
 // Canvas/Schoology assignments, todo.txt and workouts: bar text, reminders, daily summary. Menu is Mod+T.
-spawn-at-startup "dwm-todo" "daemon"
+spawn-at-startup "niri-todo" "daemon"
 // After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
-// wakes them. If dwm-update installed a new commit, the session also ends then, and
+// wakes them. If niri-update installed a new commit, the session also ends then, and
 // ~/.bash_profile starts niri again.
-spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/dwm-restart-session\" ] && niri msg action quit --skip-confirmation'"
+spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && niri msg action quit --skip-confirmation'"
 
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
@@ -136,25 +136,25 @@ binds {
 
     // The bar (hide/show) and the dmenu pickers in ~/.local/bin.
     Mod+B { spawn "pkill" "-USR1" "-x" "waybar"; }
-    Mod+N { spawn "dwm-net"; }
-    Mod+T { spawn "dwm-todo" "menu"; }
-    Mod+O { spawn "dwm-audio" "menu" "out"; }
-    Mod+Shift+O { spawn "dwm-audio" "menu" "in"; }
-    Mod+Shift+T { spawn "dwm-tray" "menu"; }
-    Mod+Shift+P { spawn "dwm-power"; }
-    Mod+Shift+M { spawn "dwm-mouse"; }
+    Mod+N { spawn "niri-net"; }
+    Mod+T { spawn "niri-todo" "menu"; }
+    Mod+O { spawn "niri-audio" "menu" "out"; }
+    Mod+Shift+O { spawn "niri-audio" "menu" "in"; }
+    Mod+Shift+T { spawn "niri-tray" "menu"; }
+    Mod+Shift+P { spawn "niri-power"; }
+    Mod+Shift+M { spawn "niri-mouse"; }
 
-    // Volume and mic, through dwm-audio so the bar updates at once.
-    Mod+F12 { spawn "dwm-audio" "vol" "up"; }
-    Mod+F11 { spawn "dwm-audio" "vol" "down"; }
-    Mod+F10 { spawn "dwm-audio" "vol" "mute"; }
-    Mod+Shift+F12 { spawn "dwm-audio" "vol" "micup"; }
-    Mod+Shift+F11 { spawn "dwm-audio" "vol" "micdown"; }
-    Mod+Shift+F10 { spawn "dwm-audio" "vol" "micmute"; }
-    XF86AudioRaiseVolume allow-when-locked=true { spawn "dwm-audio" "vol" "up"; }
-    XF86AudioLowerVolume allow-when-locked=true { spawn "dwm-audio" "vol" "down"; }
-    XF86AudioMute        allow-when-locked=true { spawn "dwm-audio" "vol" "mute"; }
-    XF86AudioMicMute     allow-when-locked=true { spawn "dwm-audio" "vol" "micmute"; }
+    // Volume and mic, through niri-audio so the bar updates at once.
+    Mod+F12 { spawn "niri-audio" "vol" "up"; }
+    Mod+F11 { spawn "niri-audio" "vol" "down"; }
+    Mod+F10 { spawn "niri-audio" "vol" "mute"; }
+    Mod+Shift+F12 { spawn "niri-audio" "vol" "micup"; }
+    Mod+Shift+F11 { spawn "niri-audio" "vol" "micdown"; }
+    Mod+Shift+F10 { spawn "niri-audio" "vol" "micmute"; }
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "niri-audio" "vol" "up"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "niri-audio" "vol" "down"; }
+    XF86AudioMute        allow-when-locked=true { spawn "niri-audio" "vol" "mute"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "niri-audio" "vol" "micmute"; }
     XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "-q" "set" "5%+"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "-q" "set" "5%-"; }
 
@@ -169,5 +169,5 @@ binds {
 
 // This machine's monitors (scale, refresh rate), written once by install.sh.
 include optional=true "local.kdl"
-// Mouse speed and acceleration picked with Mod+Shift+M (written by dwm-mouse).
+// Mouse speed and acceleration picked with Mod+Shift+M (written by niri-mouse).
 include optional=true "mouse.kdl"

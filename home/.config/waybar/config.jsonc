@@ -1,5 +1,5 @@
 // The bar, in dwm's layout: workspaces and the focused window's title on the left, the tray and
-// the dwm-status.sh line on the right. Colors are in style.css.
+// the niri-status line on the right. Colors are in style.css.
 {
     "position": "top",
     "modules-left": ["niri/workspaces", "niri/window"],
@@ -12,18 +12,18 @@
     },
     // Right-click: the tray apps menu (Mod+Shift+T).
     "niri/window": {
-        "on-click-right": "dwm-tray menu"
+        "on-click-right": "niri-tray menu"
     },
     "tray": { "spacing": 8 },
-    // dwm-status.sh prints a new line every second. Clicks as on dwm's status text: left the
+    // niri-status prints a new line every second. Clicks as on dwm's status text: left the
     // output picker, right the input picker, middle mute, wheel the volume.
     "custom/status": {
-        "exec": "dwm-status.sh",
+        "exec": "niri-status",
         "escape": true,
-        "on-click": "dwm-audio menu out",
-        "on-click-right": "dwm-audio menu in",
-        "on-click-middle": "dwm-audio vol mute",
-        "on-scroll-up": "dwm-audio vol up",
-        "on-scroll-down": "dwm-audio vol down"
+        "on-click": "niri-audio menu out",
+        "on-click-right": "niri-audio menu in",
+        "on-click-middle": "niri-audio vol mute",
+        "on-scroll-up": "niri-audio vol up",
+        "on-scroll-down": "niri-audio vol down"
     }
 }

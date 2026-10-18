@@ -41,17 +41,17 @@ with niri picking the fastest refresh rate for it.
 | --- | --- |
 | niri (window manager), waybar (bar and tray), foot (terminal), wmenu (behind a `dmenu` wrapper, so the menus look as before) | packages, configured in `~/.config/niri/`, `~/.config/waybar/`, `~/.config/foot/` |
 | `.bash_profile` (starts niri when you log in on tty1) | `~/` |
-| Bar text, audio, tray menu, network (`dwm-net`), battery (`dwm-power`), mouse speed (`dwm-mouse`), school assignments and to-dos (`dwm-todo`), and the `dmenu` wrapper | `~/.local/bin/` |
+| Bar text, audio, tray menu, network (`niri-net`), battery (`niri-power`), mouse speed (`niri-mouse`), school assignments and to-dos (`niri-todo`), and the `dmenu` wrapper | `~/.local/bin/` |
 | GTK 3/4 and Qt 5/6 dark-mode config, minimal dunst notifications in the bar's colors | `~/.config/` |
 | Firefox settings: dark mode, privacy, no AI or sponsored content (`user.js`) | your Firefox profile directory |
 | Firefox as the default browser, so links from other programs open there | `~/.config/mimeapps.list` |
 | Firefox extensions: uBlock Origin and Violentmonkey, installed by a policy (`policies.json`) | `/etc/firefox/policies/` (needs sudo) |
 | Always-visible userscript (`firefox/always-visible.user.js`) — makes pages act focused/visible in the background. Imported into Violentmonkey by hand once (a policy can't seed its scripts) | Violentmonkey |
-| A udev rule letting `dwm-mouse` read a Razer mouse's DPI | `/etc/udev/rules.d/` (needs sudo) |
+| A udev rule letting `niri-mouse` read a Razer mouse's DPI | `/etc/udev/rules.d/` (needs sudo) |
 | `.local` hostnames over mDNS (`ssh user@machine.local`): Avahi enabled, `mdns_minimal` added to the `hosts:` line | `/etc/nsswitch.conf` (needs sudo) |
 | Printing: CUPS with the Canon MX920 as the default printer (Gutenprint driver; the printer's own driverless mode fails), reached as `488E78000000.local` | CUPS, `systemctl enable cups` (needs sudo) |
 | Syncthing (keeps the KeePassXC database in sync), started now and at every login | `systemctl --user enable syncthing`. Pair devices and share the folder yourself at http://127.0.0.1:8384; keys are never in this repo |
-| Auto-update: every 5 minutes `dwm-update.timer` pulls this clone and, on a new commit, re-runs `install.sh` and restarts niri once you are idle (10 minutes without input). Failures show a notification (`journalctl --user -u dwm-update`). Needs passwordless sudo, which the installer sets up: anything running as you, and anyone who can push here, gets root | `~/.local/share/arch-dwm-desktop` (link to the clone), `/etc/sudoers.d/10-dwm-update` (undo: delete it and `systemctl --user disable --now dwm-update.timer`) |
+| Auto-update: every 5 minutes `niri-update.timer` pulls this clone and, on a new commit, re-runs `install.sh` and restarts niri once you are idle (10 minutes without input). Failures show a notification (`journalctl --user -u niri-update`). Needs passwordless sudo, which the installer sets up: anything running as you, and anyone who can push here, gets root | `~/.local/share/arch-dwm-desktop` (link to the clone), `/etc/sudoers.d/10-niri-update` (undo: delete it and `systemctl --user disable --now niri-update.timer`) |
 | Desktop-wide "prefer dark" | dconf (`org.gnome.desktop.interface`) |
 | git commit name and email (GitHub noreply address) | `~/.gitconfig` (only `user.name` and `user.email`) |
 | Tailscale, and `ssh arch-server` over it (no browser login; run `sudo tailscale up` once per machine) | `~/.ssh/config.d/`, `~/.ssh/known_hosts.d/`, plus an `Include` line at the top of your own `~/.ssh/config` |
@@ -139,7 +139,7 @@ switch by choosing one.
 
 ## School assignments and to-dos
 
-`dwm-todo` puts the next Canvas or Schoology assignment, `todo.txt` task or today's workout at the left of the status text (title and
+`niri-todo` puts the next Canvas or Schoology assignment, `todo.txt` task or today's workout at the left of the status text (title and
 time left, points and a streak of days in a row with something turned in on time or a finished focus
 session, where every 7 active days earn a streak freeze that saves a missed day; never a count of late work) and sends reminders 3 days, 1 day and 3 hours before
 each due date, plus a summary every morning. `Mod+T` opens a dmenu list: start a 10-minute focus session
@@ -180,17 +180,17 @@ It needs two things that are never in this repo, both in `~/.local/share/dwm-tod
 `install.sh` also installs Anki (with `mpv` for card audio). Once you sign in with Anki's Sync button,
 today's due cards show up as `Anki: N cards`, due at 11:59 PM; opening it starts Anki, and getting to zero is +10 and a
 streak day. The cards are counted on a copy of the collection, so Anki can stay open. While you study,
-the count drops the moment you answer a card: a small Anki add-on (`~/.local/share/Anki2/addons21/dwm_todo`,
-loaded the next time Anki starts) counts inside Anki and wakes dwm-todo, and it re-checks every 5 seconds
+the count drops the moment you answer a card: a small Anki add-on (`~/.local/share/Anki2/addons21/niri_todo`,
+loaded the next time Anki starts) counts inside Anki and wakes niri-todo, and it re-checks every 5 seconds
 as a backup. A second add-on (`~/.local/share/Anki2/addons21/pass_fail`) hides the Hard and Easy buttons
 and ignores the `2` and `4` keys, so reviews are just Again (`1`) or Good (`3`/Space).
 
-Then run `dwm-todo sync` to check it. `dwm-todo selftest` checks the parser and scoring.
+Then run `niri-todo sync` to check it. `niri-todo selftest` checks the parser and scoring.
 
 To keep points, marked-done work, the token and the config the same on several machines, share
 `~/.local/share/dwm-todo` with Syncthing (folder ID `dwm-school`, kept from before the rename so existing machines still match) and put a `.stignore` in it with
 `tasks.json`, `lock`, `daemon.lock` and `*.tmp`, so each machine fetches its own assignment list. Before
-sharing to a machine that already ran `dwm-todo`, delete its `state.json` so the empty one doesn't win.
+sharing to a machine that already ran `niri-todo`, delete its `state.json` so the empty one doesn't win.
 A machine that still has `~/.local/share/dwm-school` gets it moved to `dwm-todo` on the first run; point
 its Syncthing folder at the new path (`syncthing cli config folders dwm-school path set ~/.local/share/dwm-todo`).
 
@@ -218,7 +218,7 @@ wakes with the picture back after a 5-minute sleep.
   `nvidia-smi` works (it uses one long-running `nvidia-smi`, not a new one every second).
 * **GPU/RGB lighting control** (hardware specific).
 * **All server software** (Jellyfin, Radarr/Sonarr, Docker, Cloudflare and so on) and any
-  passwords or API keys, including the Canvas token and Schoology feed link for `dwm-todo`.
+  passwords or API keys, including the Canvas token and Schoology feed link for `niri-todo`.
 
 ## Updating this repo
 
@@ -226,8 +226,9 @@ The installer copies files *from* this repo *to* your home directory. To keep th
 after changing your live setup, copy the changed file back into the matching path under
 `home/` or `firefox/` and commit it.
 
-The helper scripts keep their `dwm-` names from the dwm version of this setup (commit `a8ea1cd` is the
-last dwm version).
+Commit `a8ea1cd` is the last dwm version of this setup. The helper scripts were called `dwm-*` then and
+are `niri-*` now; the to-do data folder keeps its old name, `~/.local/share/dwm-todo`, because Syncthing
+points at it on every machine.
 
 ## License
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 #
-# dwm-mouse: mouse sensitivity and acceleration profile (libinput, via niri's config).
+# niri-mouse: mouse sensitivity and acceleration profile (libinput, via niri's config).
 #
-#   dwm-mouse                     dmenu: pick a speed (or type one, -1 to 1) or the accel profile;
+#   niri-mouse                     dmenu: pick a speed (or type one, -1 to 1) or the accel profile;
 #                                 the prompt also shows a Razer mouse's DPI
-#   dwm-mouse speed -0.5          set the speed, -1 (slowest) to 1 (fastest), 0 is neutral
-#   dwm-mouse profile flat        flat (no acceleration, best for games) or adaptive
-#   dwm-mouse apply               write the saved settings into niri's config (install.sh runs it)
+#   niri-mouse speed -0.5          set the speed, -1 (slowest) to 1 (fastest), 0 is neutral
+#   niri-mouse profile flat        flat (no acceleration, best for games) or adaptive
+#   niri-mouse apply               write the saved settings into niri's config (install.sh runs it)
 #
-# Settings are saved in ~/.config/dwm-mouse and written to ~/.config/niri/mouse.kdl, which niri
+# Settings are saved in ~/.config/niri-mouse and written to ~/.config/niri/mouse.kdl, which niri
 # reloads at once and applies to every mouse, also ones plugged in later; touchpads are left alone.
 # Bound to Mod+Shift+M in ~/.config/niri/config.kdl.
 
-CONF="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-mouse"
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/niri-mouse"
 DMENU=(dmenu -i -l 24)
 
 SPEED="" PROFILE=""
@@ -25,7 +25,7 @@ NIRI_KDL="${XDG_CONFIG_HOME:-$HOME/.config}/niri/mouse.kdl"
 apply() {
 	mkdir -p "$(dirname "$NIRI_KDL")"
 	{
-		echo "// Written by dwm-mouse (Mod+Shift+M) from ~/.config/dwm-mouse; edits here get overwritten."
+		echo "// Written by niri-mouse (Mod+Shift+M) from ~/.config/niri-mouse; edits here get overwritten."
 		echo "input {"
 		echo "    mouse {"
 		[ -n "$SPEED" ] && echo "        accel-speed $SPEED"
@@ -38,14 +38,14 @@ apply() {
 set_speed() {
 	# Accept -1..1 only; libinput rejects anything else.
 	awk -v s="$1" 'BEGIN { exit !(s ~ /^-?[0-9]*\.?[0-9]+$/ && s >= -1 && s <= 1) }' || {
-		echo "dwm-mouse: speed must be a number from -1 to 1" >&2; return 1; }
+		echo "niri-mouse: speed must be a number from -1 to 1" >&2; return 1; }
 	SPEED="$(awk -v s="$1" 'BEGIN { printf "%.2f", s }')"
 }
 
 set_profile() {
 	case "$1" in
 	flat | adaptive) PROFILE="$1" ;;
-	*) echo "dwm-mouse: profile must be flat or adaptive" >&2; return 1 ;;
+	*) echo "niri-mouse: profile must be flat or adaptive" >&2; return 1 ;;
 	esac
 }
 
@@ -57,7 +57,7 @@ current() {
 
 # DPI as a Razer mouse reports it over hidraw (Razer's 90-byte feature report, get DPI = class 0x04,
 # id 0x85). Prints nothing for other mice or a sleeping wireless one. Opening /dev/hidraw* without
-# root needs /etc/udev/rules.d/70-dwm-mouse-dpi.rules.
+# root needs /etc/udev/rules.d/70-niri-mouse-dpi.rules.
 dpi() {
 	timeout 2 python3 -I - 2>/dev/null <<'EOF'
 import fcntl, glob, os, time
