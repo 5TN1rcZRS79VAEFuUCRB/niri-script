@@ -69,10 +69,12 @@ spawn-at-startup "niri-todo" "daemon"
 spawn-at-startup "niri-steam-overlay"
 // After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
 // wakes them. If niri-update installed a new commit, the session also ends then, and
-// ~/.bash_profile starts niri again. niri-update leaves both flags; each login loop clears only its own,
+// ~/.bash_profile starts niri again, which powers the monitors straight back off (niri-idle-restart).
+// niri-update leaves both flags; each login loop clears only its own,
 // old (dwm-, logged in before the rename) or new (niri-), so a stale one alone must not end the session.
 // ponytail: check niri-restart-session alone once every machine has logged in again since the rename.
-spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && [ -e \"$XDG_RUNTIME_DIR/dwm-restart-session\" ] && niri msg action quit --skip-confirmation'"
+spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && [ -e \"$XDG_RUNTIME_DIR/dwm-restart-session\" ] && touch \"$XDG_RUNTIME_DIR/niri-idle-restart\" && niri msg action quit --skip-confirmation'"
+spawn-sh-at-startup "rm \"$XDG_RUNTIME_DIR/niri-idle-restart\" 2>/dev/null && niri msg action power-off-monitors"
 
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
