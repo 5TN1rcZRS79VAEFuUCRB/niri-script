@@ -5,7 +5,7 @@ dwm-power: battery details and power profile, from dmenu (for laptops).
   dwm-power    show battery level, time left, power draw and health;
                pick a power profile to switch to it (needs power-profiles-daemon)
 
-The battery percentage in the bar comes from dwm-status.sh. Bound to Mod+Shift+P in dwm's config.h.
+The battery percentage in the bar comes from dwm-status.sh. Bound to Mod+Shift+P in ~/.config/niri/config.kdl.
 """
 import glob
 import shutil

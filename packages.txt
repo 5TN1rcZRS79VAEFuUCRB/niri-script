@@ -1,20 +1,16 @@
 # Packages installed by install.sh (official Arch repos only).
 # Blank lines and # comments are ignored.
 
-# --- build tools + libraries for dwm / st / dmenu ---
-base-devel
-libxft
-libxinerama
+# --- desktop: niri (window manager), waybar (bar + tray), foot (terminal), wmenu (dmenu for Wayland) ---
+niri
+xwayland-satellite        # X11-only apps (Steam, many games); niri starts it when one opens
+xdg-desktop-portal-gnome  # screen sharing and screenshots for apps under niri
+waybar
+foot
+wmenu
+swayidle                  # monitors off after 10 minutes idle (see ~/.config/niri/config.kdl)
 
-# --- X server and the tools ~/.xinitrc and the bar use ---
-xorg-server
-xorg-xinit
-xorg-xrandr
-xorg-xrdb
-xorg-xset
-xorg-xsetroot
-
-# --- fonts (dwm, st and dmenu all resolve to DejaVu Sans Mono; the bar icons come from the Nerd Font symbols) ---
+# --- fonts (bar, terminal and menus all resolve to DejaVu Sans Mono; the bar icons come from the Nerd Font symbols) ---
 ttf-dejavu
 ttf-nerd-fonts-symbols-mono
 
@@ -27,11 +23,8 @@ libpulse
 rtkit
 alsa-utils       # runs the UCM boot sequence at startup; without it the laptop mic-mute LED never follows mute
 
-# --- laptop backlight (Fn brightness keys, bound in dwm's config.h)
+# --- laptop backlight (Fn brightness keys, bound in ~/.config/niri/config.kdl)
 brightnessctl
-
-# --- idle screen blanking (see dwm-blank)
-libxss
 
 # --- network picker (dwm-net, Mod+N); the laptop's battery and power profile need no package here
 networkmanager
@@ -47,10 +40,6 @@ nss-mdns
 # --- printing: CUPS + Gutenprint (the Canon MX920 needs a driver; its driverless/AirPrint setup fails)
 cups
 gutenprint
-
-# --- screenshots (dwm-shot: Print / Shift+Print)
-maim
-xclip
 
 # --- notifications: dwm-todo reminders (notify-send + dunst) ---
 dunst

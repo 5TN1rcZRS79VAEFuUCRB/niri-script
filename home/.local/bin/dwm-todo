@@ -3,9 +3,9 @@
 dwm-todo: Canvas + Schoology assignments, your own to-dos and workouts in the dwm bar, with points,
 a streak and reminders.
 
-  dwm-todo daemon    sync every 5 min, refresh the bar and send reminders every minute (~/.xinitrc)
+  dwm-todo daemon    sync every 5 min, refresh the bar and send reminders every minute (started by niri)
   dwm-todo sync      sync once and print the bar text and any errors
-  dwm-todo menu      dmenu: next task, 10-minute focus timer, open / mark done (Mod+a in config.h)
+  dwm-todo menu      dmenu: next task, 10-minute focus timer, open / mark done (Mod+A in ~/.config/niri/config.kdl)
   dwm-todo selftest  check the feed parser, ordering and scoring
 
 Setup, in ~/.local/share/dwm-todo/ (share that folder with Syncthing to keep machines in step):

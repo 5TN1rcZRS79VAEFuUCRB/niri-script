@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# dwm-update: pulls this repo and re-runs install.sh when a new commit is pushed, then asks for X to
+# dwm-update: pulls this repo and re-runs install.sh when a new commit is pushed, then asks for niri to
 # restart. Run every 5 minutes by dwm-update.timer. install.sh records the commit it installed, so a
 # failed install (pacman lock, no network) is retried on the next run instead of being skipped.
-# The restart waits until you are idle: dwm-blank does it once the screen saver is on.
+# The restart waits until you are idle: swayidle does it (see ~/.config/niri/config.kdl).
 
 set -euo pipefail
 trap 'notify-send -u critical "dwm-update failed" "journalctl --user -u dwm-update" 2>/dev/null || true' ERR
@@ -13,4 +13,4 @@ git pull --ff-only -q                       # refuses (and notifies) if this clo
 [ "$(git rev-parse HEAD)" = "$(cat "$HOME/.local/state/arch-dwm-desktop-installed" 2>/dev/null)" ] && exit 0
 
 ./install.sh
-touch "$XDG_RUNTIME_DIR/dwm-restart-x"
+touch "$XDG_RUNTIME_DIR/dwm-restart-session"

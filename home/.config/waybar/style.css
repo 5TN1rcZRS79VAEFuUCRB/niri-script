@@ -1,0 +1,32 @@
+/* dwm's bar colors and font. */
+* {
+	font-family: monospace, "Symbols Nerd Font Mono";
+	font-size: 10pt;
+	border: none;
+	border-radius: 0;
+	min-height: 0;
+}
+
+window#waybar {
+	background: #222222;
+	color: #bbbbbb;
+}
+
+#workspaces button {
+	padding: 0 6px;
+	color: #bbbbbb;
+	box-shadow: none;
+	text-shadow: none;
+}
+
+#workspaces button.active,
+#workspaces button:hover {
+	background: #eeeeee;
+	color: #000000;
+}
+
+#window,
+#tray,
+#custom-status {
+	padding: 0 8px;
+}

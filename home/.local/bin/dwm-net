@@ -6,7 +6,7 @@ dwm-net: choose which network to use, from dmenu (needs NetworkManager).
 
 Choosing a Wi-Fi network connects to it. A network you have not used before that needs a
 password opens a small terminal running `nmcli --ask`, so the password is never shown on
-screen. Bound to Mod+N in dwm's config.h.
+screen. Bound to Mod+N in ~/.config/niri/config.kdl.
 """
 import shlex
 import shutil
@@ -165,7 +165,7 @@ def message(text):
 
 
 def terminal(*cmd):
-    term = shutil.which("st") or shutil.which("xterm")
+    term = shutil.which("foot")
     if term:
         subprocess.Popen([term, "-e", *cmd])
     else:

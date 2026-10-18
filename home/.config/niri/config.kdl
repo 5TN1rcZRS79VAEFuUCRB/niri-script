@@ -1,0 +1,161 @@
+// niri: the window manager (replaces dwm). Saved changes apply at once, no restart.
+// All options: https://niri-wm.github.io/niri/Configuration:-Introduction
+//
+// No numbered tags: windows open as columns on a strip that scrolls sideways, and workspaces stack
+// vertically, with an empty one always waiting at the bottom. Mod+Shift+/ lists every key.
+
+input {
+    // One-finger tap is a left click, two fingers a right click, three a middle click.
+    touchpad {
+        tap
+    }
+}
+
+layout {
+    gaps 8
+    background-color "#000000"
+    center-focused-column "never"
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+    default-column-width { proportion 0.5; }
+    // dwm's colors: the focused window gets a light outline, the rest none.
+    focus-ring {
+        width 2
+        active-color "#eeeeee"
+        inactive-color "#444444"
+    }
+}
+
+// No title bars on GTK/Qt windows, as under dwm.
+prefer-no-csd
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+// Every screenshot is also copied to the clipboard.
+screenshot-path "~/Pictures/Screenshots/screenshot-%Y-%m-%d_%H-%M-%S.png"
+
+environment {
+    // Route Qt apps (KeePassXC, etc.) through qt6ct/qt5ct for the dark palette configured there.
+    // Qt5 apps only load the qt5ct plugin and Qt6 apps only qt6ct; each skips the one it can't.
+    QT_QPA_PLATFORMTHEME "qt5ct:qt6ct"
+    // Fullscreen SDL games (Garry's Mod, Source games, ...) minimize when they lose focus.
+    SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS "0"
+}
+
+// The bar: workspaces, window title, tray and the dwm-status.sh line (~/.config/waybar/).
+spawn-at-startup "waybar"
+// Canvas/Schoology assignments, todo.txt and workouts: bar text, reminders, daily summary. Menu is Mod+A.
+spawn-at-startup "dwm-todo" "daemon"
+// After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
+// wakes them. If dwm-update installed a new commit, the session also ends then, and
+// ~/.bash_profile starts niri again.
+spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/dwm-restart-session\" ] && niri msg action quit --skip-confirmation'"
+
+window-rule {
+    match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+binds {
+    Mod+Shift+Slash { show-hotkey-overlay; }
+    Mod+Shift+Return { spawn "foot"; }
+    Mod+P { spawn "dmenu" "run"; }
+    Mod+Shift+C repeat=false { close-window; }
+    Mod+Shift+Q { quit; }
+    // Every workspace at a glance; pick a window with the mouse or the keys below. Also the
+    // top-left screen corner.
+    Mod+Tab repeat=false { toggle-overview; }
+
+    // Columns left/right, windows within a column down/up. Add Ctrl to move the window instead.
+    Mod+H { focus-column-left; }
+    Mod+L { focus-column-right; }
+    Mod+J { focus-window-down; }
+    Mod+K { focus-window-up; }
+    Mod+Ctrl+H { move-column-left; }
+    Mod+Ctrl+L { move-column-right; }
+    Mod+Ctrl+J { move-window-down; }
+    Mod+Ctrl+K { move-window-up; }
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+
+    // Workspaces down/up. Ctrl takes the window along, Shift moves the whole workspace.
+    Mod+U         { focus-workspace-down; }
+    Mod+I         { focus-workspace-up; }
+    Mod+Ctrl+U    { move-column-to-workspace-down; }
+    Mod+Ctrl+I    { move-column-to-workspace-up; }
+    Mod+Shift+U   { move-workspace-down; }
+    Mod+Shift+I   { move-workspace-up; }
+    Mod+Page_Down { focus-workspace-down; }
+    Mod+Page_Up   { focus-workspace-up; }
+    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
+    Mod+Shift+WheelScrollDown { focus-column-right; }
+    Mod+Shift+WheelScrollUp   { focus-column-left; }
+
+    // Monitors (dwm's Mod+, and Mod+.).
+    Mod+Comma        { focus-monitor-left; }
+    Mod+Period       { focus-monitor-right; }
+    Mod+Shift+Comma  { move-column-to-monitor-left; }
+    Mod+Shift+Period { move-column-to-monitor-right; }
+
+    // Stack a window into the column beside it, or pull it out into its own column.
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+
+    // Sizes: cycle 1/3, 1/2, 2/3 of the screen, full width, fullscreen, or 10% steps.
+    Mod+R { switch-preset-column-width; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+C { center-column; }
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+    Mod+V { toggle-window-floating; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+    Mod+W { toggle-column-tabbed-display; }
+
+    // The bar (hide/show) and the dmenu pickers in ~/.local/bin.
+    Mod+B { spawn "pkill" "-USR1" "-x" "waybar"; }
+    Mod+N { spawn "dwm-net"; }
+    Mod+A { spawn "dwm-todo" "menu"; }
+    Mod+O { spawn "dwm-audio" "menu" "out"; }
+    Mod+Shift+O { spawn "dwm-audio" "menu" "in"; }
+    Mod+Shift+T { spawn "dwm-tray" "menu"; }
+    Mod+Shift+P { spawn "dwm-power"; }
+    Mod+Shift+M { spawn "dwm-mouse"; }
+
+    // Volume and mic, through dwm-audio so the bar updates at once.
+    Mod+F12 { spawn "dwm-audio" "vol" "up"; }
+    Mod+F11 { spawn "dwm-audio" "vol" "down"; }
+    Mod+F10 { spawn "dwm-audio" "vol" "mute"; }
+    Mod+Shift+F12 { spawn "dwm-audio" "vol" "micup"; }
+    Mod+Shift+F11 { spawn "dwm-audio" "vol" "micdown"; }
+    Mod+Shift+F10 { spawn "dwm-audio" "vol" "micmute"; }
+    XF86AudioRaiseVolume allow-when-locked=true { spawn "dwm-audio" "vol" "up"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "dwm-audio" "vol" "down"; }
+    XF86AudioMute        allow-when-locked=true { spawn "dwm-audio" "vol" "mute"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn "dwm-audio" "vol" "micmute"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "-q" "set" "5%+"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "-q" "set" "5%-"; }
+
+    // Screenshots: whole screen, pick an area or window (niri's own selector), focused window.
+    Print { screenshot-screen; }
+    Shift+Print { screenshot; }
+    Alt+Print { screenshot-window; }
+
+    // A game or VM that grabs every key: Mod+Escape gives niri its shortcuts back.
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+}
+
+// This machine's monitors (scale, refresh rate), written once by install.sh.
+include optional=true "local.kdl"
+// Mouse speed and acceleration picked with Mod+Shift+M (written by dwm-mouse).
+include optional=true "mouse.kdl"

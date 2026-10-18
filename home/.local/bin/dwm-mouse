@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# dwm-mouse: mouse sensitivity and acceleration profile (libinput, via xinput).
+# dwm-mouse: mouse sensitivity and acceleration profile (libinput, via niri's config).
 #
 #   dwm-mouse                     dmenu: pick a speed (or type one, -1 to 1) or the accel profile;
 #                                 the prompt also shows a Razer mouse's DPI
 #   dwm-mouse speed -0.5          set the speed, -1 (slowest) to 1 (fastest), 0 is neutral
 #   dwm-mouse profile flat        flat (no acceleration, best for games) or adaptive
-#   dwm-mouse apply               re-apply the saved settings (run from ~/.xinitrc)
+#   dwm-mouse apply               write the saved settings into niri's config (install.sh runs it)
 #
-# Settings are saved in ~/.config/dwm-mouse and applied to every mouse; touchpads are left alone.
-# Until something is saved, nothing is changed, so any xorg.conf.d settings stay in effect.
-# Bound to Mod+Shift+M in dwm's config.h.
+# Settings are saved in ~/.config/dwm-mouse and written to ~/.config/niri/mouse.kdl, which niri
+# reloads at once and applies to every mouse, also ones plugged in later; touchpads are left alone.
+# Bound to Mod+Shift+M in ~/.config/niri/config.kdl.
 
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}/dwm-mouse"
 DMENU=(dmenu -i -l 24)
@@ -20,30 +20,19 @@ SPEED="" PROFILE=""
 
 save() { printf 'SPEED=%s\nPROFILE=%s\n' "$SPEED" "$PROFILE" >"$CONF"; }
 
-# Ids of libinput pointer devices that have acceleration settings, minus touchpads (they have tapping).
-mice() {
-	local id props
-	for id in $(xinput list --id-only); do
-		props="$(xinput list-props "$id" 2>/dev/null)"
-		grep -q 'libinput Accel Speed (' <<<"$props" || continue
-		grep -q 'libinput Tapping Enabled (' <<<"$props" && continue
-		echo "$id"
-	done
-}
+NIRI_KDL="${XDG_CONFIG_HOME:-$HOME/.config}/niri/mouse.kdl"
 
 apply() {
-	local id n vec i
-	for id in $(mice); do
-		[ -n "$SPEED" ] && xinput set-prop "$id" "libinput Accel Speed" "$SPEED"
-		if [ -n "$PROFILE" ]; then
-			# One flag per available profile, in libinput's order: adaptive, flat[, custom].
-			n="$(xinput list-props "$id" | sed -n 's/.*libinput Accel Profiles Available ([0-9]*):\s*//p' | tr -cd ',' | wc -c)"
-			vec=()
-			for ((i = 0; i <= n; i++)); do vec+=(0); done
-			[ "$PROFILE" = flat ] && vec[1]=1 || vec[0]=1
-			xinput set-prop "$id" "libinput Accel Profile Enabled" "${vec[@]}"
-		fi
-	done
+	mkdir -p "$(dirname "$NIRI_KDL")"
+	{
+		echo "// Written by dwm-mouse (Mod+Shift+M) from ~/.config/dwm-mouse; edits here get overwritten."
+		echo "input {"
+		echo "    mouse {"
+		[ -n "$SPEED" ] && echo "        accel-speed $SPEED"
+		[ -n "$PROFILE" ] && echo "        accel-profile \"$PROFILE\""
+		echo "    }"
+		echo "}"
+	} >"$NIRI_KDL"
 }
 
 set_speed() {
@@ -60,19 +49,10 @@ set_profile() {
 	esac
 }
 
-# Current values as the first mouse actually has them, for the menu.
+# Current values for the menu: the saved ones, else libinput's defaults for a mouse.
 current() {
-	local id props
-	id="$(mice | head -n1)"
-	[ -n "$id" ] || return
-	props="$(xinput list-props "$id")"
-	CUR_SPEED="$(sed -n 's/.*libinput Accel Speed ([0-9]*):\s*//p' <<<"$props")"
-	CUR_SPEED="$(awk -v s="$CUR_SPEED" 'BEGIN { printf "%.2f", s }')"
-	case "$(sed -n 's/.*libinput Accel Profile Enabled ([0-9]*):\s*//p' <<<"$props")" in
-	0,\ 1*) CUR_PROFILE=flat ;;
-	1,*) CUR_PROFILE=adaptive ;;
-	*) CUR_PROFILE=other ;;
-	esac
+	CUR_SPEED="$(awk -v s="${SPEED:-0}" 'BEGIN { printf "%.2f", s }')"
+	CUR_PROFILE="${PROFILE:-adaptive}"
 }
 
 # DPI as a Razer mouse reports it over hidraw (Razer's 90-byte feature report, get DPI = class 0x04,
@@ -122,9 +102,6 @@ menu() {
 	profile:*) set_profile "$other" ;;
 	*) set_speed "${choice%% *}" ;;
 	esac || exit 1
-	# Keep the other setting as it is now, so saving one doesn't drop the other.
-	[ -n "$SPEED" ] || SPEED="$CUR_SPEED"
-	[ -n "$PROFILE" ] || [ "$CUR_PROFILE" = other ] || PROFILE="$CUR_PROFILE"
 	save && apply
 }
 

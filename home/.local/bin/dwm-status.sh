@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# dwm status bar: CPU/GPU usage, CPU/GPU temp, RAM usage, volume, clock.
-# Sets the root window name, which dwm displays on the right side of its bar.
+# Status line: CPU/GPU usage, CPU/GPU temp, RAM usage, volume, clock.
+# Prints one line a second; waybar shows the latest on the right of the bar (custom/status in
+# ~/.config/waybar/config.jsonc).
 #
 # The clock ticks every second; the heavier stats (CPU/GPU/RAM) are sampled
 # in the background every 2s and cached, so the clock never waits on them.
 
 # Not a fixed name in world-writable /tmp: another local user could pre-create it as a symlink.
-# Only one bar at a time: stop a copy left over from an earlier start or X session.
+# Only one bar at a time: stop a copy left over from an earlier start or session.
 PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/dwm-status.pid"
 [ -r "$PIDFILE" ] && kill "$(cat "$PIDFILE")" 2>/dev/null
 
@@ -89,7 +90,7 @@ sampler() {
 sampler &
 SAMPLER=$!
 trap 'kill $SAMPLER $GPU_READER 2>/dev/null; pkill -P $$ nvidia-smi 2>/dev/null' EXIT
-trap 'exit' TERM  # so a kill runs the EXIT cleanup above
+trap 'exit' TERM PIPE  # so a kill, or waybar going away, runs the EXIT cleanup above
 
 # dwm-audio sends USR1 after a volume/device change so the bar redraws
 # immediately instead of waiting out the one-second sleep below.
@@ -119,6 +120,6 @@ while true; do
 		printf -v hw '%s %d:%02d %s' "$ficon" $((left / 60)) $((left % 60)) "$ftext"
 	fi
 
-	xsetroot -name "${hw:+ $hw |}${stats} |  ${ram:-?}${bat:+ | $bat} | ${vol:- ?} | ${clock} "
+	printf '%s\n' "${hw:+ $hw |}${stats} |  ${ram:-?}${bat:+ | $bat} | ${vol:- ?} | ${clock} "
 	sleep 1 & wait $!
 done

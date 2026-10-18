@@ -1,8 +1,8 @@
 # arch-dwm-desktop
 
-A one-command setup for my Arch Linux desktop: dwm, st and dmenu with my configs, a status
-bar with CPU/GPU/RAM/volume/mic, mouse-clickable audio device pickers, dark mode everywhere,
-and Firefox/KeePassXC settings. Desktop only: nothing from the media server is in here.
+A one-command setup for my Arch Linux desktop: the niri window manager (Wayland) with waybar, the
+foot terminal and dmenu-style menus, a status bar with CPU/GPU/RAM/volume/mic, mouse-clickable audio
+device pickers, dark mode everywhere, and Firefox/KeePassXC settings. Desktop only: nothing from the media server is in here.
 
 ## Quick start
 
@@ -15,42 +15,43 @@ cd arch-dwm-desktop
 ./install.sh
 ```
 
-Then log in on the first **text console** (Ctrl+Alt+F1). X starts automatically after login. If it
-doesn't (other console, or you exited X), run `startx`.
+Then log in on the first **text console** (Ctrl+Alt+F1). niri starts automatically after login. If it
+doesn't (other console, or you quit niri), run `niri-session`.
 
 ### Options
 
 | Option | What it does |
 | --- | --- |
-| `--dpi N` | Display scaling: `96` (100%), `120`, `144` (150%), `168`, `192` (200%). By default a re-run keeps the value already in `~/.Xresources`, so scaling you picked stays put; a first install uses 96. |
+| `--scale N` | Display scaling for every monitor connected now: `1`, `1.25`, `1.5`, `2`... Written to `~/.config/niri/local.kdl`. By default a re-run leaves that file alone, so scaling you picked stays put; a first install converts `Xft.dpi` from an old `~/.Xresources` (`144` becomes `1.5`), else uses 1. |
 | `--steam` | Also install Steam plus the matching 32-bit graphics libraries. Needs `[multilib]` enabled in `/etc/pacman.conf`. |
 | `--no-packages` | Skip the pacman step. |
-| `--no-build` | Skip compiling and installing dwm/st/dmenu. |
 
 Re-running the installer is safe. Anything it would overwrite is copied to
 `~/.desktop-backup/<timestamp>/` first.
 
-Text too small (e.g. a 4K or laptop screen)? Change the scaling without reinstalling anything: `./install.sh --no-packages --no-build --dpi 144`, then log out
-of X and run `startx` again.
+Text too small (e.g. a 4K or laptop screen)? Edit `scale` in `~/.config/niri/local.kdl`: niri applies it
+the moment you save, per monitor. That file is this machine's own (the installer writes it once and then
+leaves it alone), so it is also the place for a monitor's `mode`, `variable-refresh-rate` (G-SYNC/FreeSync)
+or `position`; `niri msg outputs` lists the names and modes. Each monitor starts at its native resolution
+with niri picking the fastest refresh rate for it.
 
 ## What gets installed
 
 | Piece | Where it goes |
 | --- | --- |
-| dwm, st, dmenu (built from the sources in `suckless/`) | `~/.local/src/` and `/usr/local/bin/` |
-| `.xinitrc`, `.Xresources` (scaling, cursor), `.bash_profile` (starts X when you log in on tty1) | `~/` |
-| Bar, audio, tray, network (`dwm-net`), battery (`dwm-power`), mouse speed (`dwm-mouse`), school assignments and to-dos (`dwm-todo`) and screenshot scripts, the idle screen-off (`dwm-blank`), plus a `keepassxc` launcher (slightly smaller text at high DPI) | `~/.local/bin/` |
-| GTK 3/4, Qt 5/6 and xdg-portal dark-mode config, minimal dunst notifications in the bar's colors | `~/.config/` |
+| niri (window manager), waybar (bar and tray), foot (terminal), wmenu (behind a `dmenu` wrapper, so the menus look as before) | packages, configured in `~/.config/niri/`, `~/.config/waybar/`, `~/.config/foot/` |
+| `.bash_profile` (starts niri when you log in on tty1) | `~/` |
+| Bar text, audio, tray menu, network (`dwm-net`), battery (`dwm-power`), mouse speed (`dwm-mouse`), school assignments and to-dos (`dwm-todo`), and the `dmenu` wrapper | `~/.local/bin/` |
+| GTK 3/4 and Qt 5/6 dark-mode config, minimal dunst notifications in the bar's colors | `~/.config/` |
 | Firefox settings: dark mode, privacy, no AI or sponsored content (`user.js`) | your Firefox profile directory |
 | Firefox as the default browser, so links from other programs open there | `~/.config/mimeapps.list` |
 | Firefox extensions: uBlock Origin and Violentmonkey, installed by a policy (`policies.json`) | `/etc/firefox/policies/` (needs sudo) |
 | Always-visible userscript (`firefox/always-visible.user.js`) — makes pages act focused/visible in the background. Imported into Violentmonkey by hand once (a policy can't seed its scripts) | Violentmonkey |
-| Xorg: touchpad tap-to-click (one finger left, two right, three middle); on AMD GPUs only, AMD's driver (`xf86-video-amdgpu`) with TearFree | `/etc/X11/xorg.conf.d/` (needs sudo) |
-| Mouse speed / acceleration profile re-applied when a mouse is plugged in (a udev rule starting `dwm-mouse.service`), and a udev rule letting `dwm-mouse` read a Razer mouse's DPI | `/etc/udev/rules.d/`, `~/.config/systemd/user/` |
+| A udev rule letting `dwm-mouse` read a Razer mouse's DPI | `/etc/udev/rules.d/` (needs sudo) |
 | `.local` hostnames over mDNS (`ssh user@machine.local`): Avahi enabled, `mdns_minimal` added to the `hosts:` line | `/etc/nsswitch.conf` (needs sudo) |
 | Printing: CUPS with the Canon MX920 as the default printer (Gutenprint driver; the printer's own driverless mode fails), reached as `488E78000000.local` | CUPS, `systemctl enable cups` (needs sudo) |
 | Syncthing (keeps the KeePassXC database in sync), started now and at every login | `systemctl --user enable syncthing`. Pair devices and share the folder yourself at http://127.0.0.1:8384; keys are never in this repo |
-| Auto-update: every 5 minutes `dwm-update.timer` pulls this clone and, on a new commit, re-runs `install.sh` and restarts X once you are idle (screen saver on, 10 minutes without input). Failures show a notification (`journalctl --user -u dwm-update`). Needs passwordless sudo, which the installer sets up: anything running as you, and anyone who can push here, gets root | `~/.local/share/arch-dwm-desktop` (link to the clone), `/etc/sudoers.d/10-dwm-update` (undo: delete it and `systemctl --user disable --now dwm-update.timer`) |
+| Auto-update: every 5 minutes `dwm-update.timer` pulls this clone and, on a new commit, re-runs `install.sh` and restarts niri once you are idle (10 minutes without input). Failures show a notification (`journalctl --user -u dwm-update`). Needs passwordless sudo, which the installer sets up: anything running as you, and anyone who can push here, gets root | `~/.local/share/arch-dwm-desktop` (link to the clone), `/etc/sudoers.d/10-dwm-update` (undo: delete it and `systemctl --user disable --now dwm-update.timer`) |
 | Desktop-wide "prefer dark" | dconf (`org.gnome.desktop.interface`) |
 | git commit name and email (GitHub noreply address) | `~/.gitconfig` (only `user.name` and `user.email`) |
 | Tailscale, and `ssh arch-server` over it (no browser login; run `sudo tailscale up` once per machine) | `~/.ssh/config.d/`, `~/.ssh/known_hosts.d/`, plus an `Include` line at the top of your own `~/.ssh/config` |
@@ -60,19 +61,29 @@ Packages are listed in `packages.txt`.
 
 ## Keys and mouse
 
-`Mod` is the Super (Windows) key.
+`Mod` is the Super (Windows) key. `Mod+Shift+/` shows every key on screen.
+
+There are no numbered workspaces. Each window opens as a column on a strip that scrolls sideways,
+so nothing gets squeezed when you open more. Workspaces stack vertically, and there is always an
+empty one at the bottom: move a window down to it to start a new workspace, and an emptied
+workspace disappears. The dots on the left of the bar show them. Click one to go there.
 
 | Action | Keys |
 | --- | --- |
 | Terminal / launcher | `Mod+Shift+Enter` / `Mod+P` |
-| Focus next / previous window | `Mod+J` / `Mod+K` |
-| Resize the main area | `Mod+H` / `Mod+L` |
-| Swap window with the main area | `Mod+Enter` |
-| Tiling / floating / monocle layout | `Mod+T` / `Mod+F` / `Mod+M` |
+| Focus the column left / right | `Mod+H` / `Mod+L` (or `Mod+Shift`+scroll) |
+| Focus the window below / above in a column | `Mod+J` / `Mod+K` |
+| Move the window instead | add `Ctrl` (`Mod+Ctrl+H/J/K/L`) |
+| Workspace below / above | `Mod+U` / `Mod+I` (or `Mod`+scroll, `Mod+Page Down/Up`) |
+| Take the window to the workspace below / above | `Mod+Ctrl+U` / `Mod+Ctrl+I` |
+| Overview of every workspace (pick a window with the mouse) | `Mod+Tab`, or push the mouse into the top-left corner |
+| Column width: 1/3, 1/2, 2/3 / full / 10% steps | `Mod+R` / `Mod+F` / `Mod+-` and `Mod+=` |
+| Fullscreen / float / tabbed column | `Mod+Shift+F` / `Mod+V` / `Mod+W` |
+| Stack a window into the next column, or pull it out | `Mod+[` / `Mod+]` |
+| Monitor left / right (take the window along) | `Mod+,` / `Mod+.` (`Mod+Shift+,` / `Mod+Shift+.`) |
 | Close window | `Mod+Shift+C` |
-| Go to workspace 1-9 / move window there | `Mod+1..9` / `Mod+Shift+1..9` |
 | Hide the bar | `Mod+B` |
-| Quit dwm | `Mod+Shift+Q` |
+| Quit niri | `Mod+Shift+Q` |
 | **Volume up / down / mute** | `Mod+F12` / `Mod+F11` / `Mod+F10` (or the keyboard's media keys) |
 | **Mic up / down / mute** | `Mod+Shift+F12` / `Mod+Shift+F11` / `Mod+Shift+F10` |
 | **Laptop screen brightness up / down** | The keyboard's brightness keys (5% steps) |
@@ -82,33 +93,29 @@ Packages are listed in `packages.txt`.
 | **Battery details / power profile** | `Mod+Shift+P` |
 | **Mouse speed / acceleration profile (flat or adaptive), shows a Razer mouse's DPI** | `Mod+Shift+M` |
 | **School assignments: next task, 10-minute focus timer, open / mark done** | `Mod+A` |
-| **Screenshot: whole screen / drag an area** | `Print` / `Shift+Print` |
+| **Screenshot: whole screen / pick an area or window / the focused window** | `Print` / `Shift+Print` / `Alt+Print` |
+
+All keys are in `~/.config/niri/config.kdl` (copied from `home/.config/niri/` here); niri applies a
+saved change at once.
 
 On the status bar text itself:
 
 | Mouse | Action |
 | --- | --- |
 | Scroll up / down | Output volume up / down |
-| `Shift` + scroll | Mic volume up / down |
 | Left click | Output device picker |
 | Right click | Input device picker |
 | Middle click | Mute output |
 
-Inside a picker menu, click an entry to select it, scroll to move the highlight, and right-click
-or click outside to cancel. The bottom entry jumps between the output and input pickers.
+In a picker, the bottom entry jumps between the output and input pickers.
 
 ## System tray
 
-dwm has no tray, so apps that "minimize to tray" (Discord, Steam, ...) would just vanish. `dwm-tray`
-runs a small StatusNotifier service (started from `.xinitrc`) that those apps register with.
-Press `Mod+Shift+T` (or right-click the window title in the bar) to get a dmenu list of the apps
-in the tray; choosing one brings it back. Every app is also listed as `quit: <app>`: choosing that
-closes it for real (an app's window close button usually just hides it back to the tray). It clicks the
-Quit/Exit entry in the app's tray menu, or sends the app a normal terminate signal if it has none.
-
-Apps register when they start, so launch them after logging in to X. An app that was already
-running before the tray service started may not appear until it is restarted. Apps that only
-support the old-style tray (not StatusNotifier) will not show up.
+Apps that "minimize to tray" (Discord, Steam, ...) show their icons in the bar, left of the status
+text; click one to bring the app back. `Mod+Shift+T` (or right-clicking the window title in the bar)
+lists the same apps in dmenu. Every app is also listed as `quit: <app>`: choosing that closes it for
+real (an app's window close button usually just hides it back to the tray). It clicks the Quit/Exit
+entry in the app's tray menu, or sends the app a normal terminate signal if it has none.
 
 ## Network picker
 
@@ -191,22 +198,17 @@ its Syncthing folder at the new path (`syncthing cli config folders dwm-school p
 
 ## Screenshots
 
-`Print` saves a screenshot of the whole screen and `Shift+Print` lets you drag a rectangle (click a
-window to grab just it, `Esc` cancels). Both write a PNG to `~/Pictures/Screenshots/` and copy it
-to the clipboard, so you can paste it straight into a chat. It is the `dwm-shot` script, which uses
-`maim`, `slop` and `xclip`. The keys are part of dwm, so they work after dwm is rebuilt and restarted;
-until then, run `dwm-shot` from dmenu (`Mod+P`).
+`Print` takes the whole screen, `Shift+Print` opens niri's selector (drag an area or click a window,
+`Space` or `Enter` takes it, `Esc` cancels) and `Alt+Print` takes the focused window. Each is saved as
+a PNG in `~/Pictures/Screenshots/` and copied to the clipboard, so you can paste it straight into a chat.
 
-## Idle screen-off (no DPMS)
+## Idle screen-off
 
-After 10 minutes idle the screen goes black, but the monitor is **not** put to sleep: `dwm-blank` sets every
-output's brightness to 0 while the X screen saver is active and restores it the instant you touch a key or the
-mouse. DPMS is switched off in `.xinitrc` on purpose. With some monitors on NVIDIA + DisplayPort (seen with a
-Samsung Odyssey G8 at 4K 240 Hz, whose compressed DSC link does not re-train after a long sleep), waking from
-DPMS sleep can leave "monitor on, no picture" until you reboot. Not cutting the signal avoids that. If your setup
-has no such problem and you want real monitor sleep, replace the `xset -dpms` block in `.xinitrc` with
-`xset s 600 600` and `xset dpms 600 600 600`, and stop starting `dwm-blank`. Video players that suppress the
-screen saver are honoured, because `dwm-blank` follows the X server's own saver state.
+After 10 minutes idle `swayidle` powers the monitors off; any key or mouse movement wakes them. Video
+players that ask the desktop to stay awake are honoured. The X11 version of this setup only dimmed the
+picture to black instead, because waking an NVIDIA DisplayPort monitor from X's DPMS sleep could leave
+it without a picture; under niri that has not happened. To change the timeout, edit the `swayidle` line
+in `~/.config/niri/config.kdl`.
 
 ## Not included on purpose
 
@@ -221,13 +223,11 @@ screen saver are honoured, because `dwm-blank` follows the X server's own saver 
 
 The installer copies files *from* this repo *to* your home directory. To keep the repo current
 after changing your live setup, copy the changed file back into the matching path under
-`home/`, `firefox/` or `suckless/` and commit it.
+`home/` or `firefox/` and commit it.
 
-`suckless/UPSTREAM.txt` records which upstream commits the vendored dwm/st/dmenu are based on
-and what was changed. Those tools keep their own licenses (see the `LICENSE` files inside).
+The helper scripts keep their `dwm-` names from the dwm version of this setup (commit `a8ea1cd` is the
+last dwm version).
 
 ## License
 
 The scripts, configuration and installer in this repository are under the GNU General Public License v3.0 or later (see `LICENSE`).
-dwm, st and dmenu in `suckless/` are the suckless.org projects and keep their own licenses
-(see the `LICENSE` file in each folder).

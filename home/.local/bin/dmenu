@@ -1,0 +1,9 @@
+#!/bin/sh
+# dmenu for Wayland: wmenu takes dmenu's options (-i, -l, -p), so the pickers in ~/.local/bin keep
+# calling "dmenu". Adds dmenu's colors from the old config.h.
+#
+#   dmenu [dmenu options]    a menu of the lines on stdin
+#   dmenu run                the app launcher (Mod+P)
+colors='-N 222222 -n bbbbbb -M eeeeee -m 000000 -S eeeeee -s 000000'   # split into words on purpose
+[ "$1" = run ] && exec wmenu-run -f "monospace 10" $colors -p run:
+exec wmenu -f "monospace 10" $colors "$@"

@@ -1,38 +1,36 @@
 #!/usr/bin/env bash
 #
-# Recreates this dwm desktop on an Arch Linux machine.
+# Recreates this niri desktop on an Arch Linux machine.
 # Run as your normal user (it calls sudo where it needs root):  ./install.sh
 # Safe to re-run; anything it would overwrite is backed up first.
 
 set -euo pipefail
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
-DPI="${DPI:-}"
+SCALE="${SCALE:-}"
 DO_PACKAGES=1
-DO_BUILD=1
 WITH_STEAM=0
 
 usage() {
 	cat <<'EOF'
 Usage: ./install.sh [options]
 
-  --dpi N         display scaling: 96 (100%), 120, 144 (150%), 168, 192 (200%).
-                  Default: on a re-run, the value already in ~/.Xresources;
-                  on a first install, 96.
+  --scale N       display scaling for every monitor connected now: 1, 1.25, 1.5, 2...
+                  Written to ~/.config/niri/local.kdl. Default: a re-run keeps that
+                  file as it is; a first install converts Xft.dpi from an old
+                  ~/.Xresources (144 -> 1.5), else uses 1.
   --steam         also install Steam (needs the [multilib] repo enabled in
                   /etc/pacman.conf) and the matching 32-bit graphics libraries
   --no-packages   skip the pacman step
-  --no-build      skip compiling/installing dwm, st and dmenu
   -h, --help      this text
 EOF
 }
 
 while [ $# -gt 0 ]; do
 	case "$1" in
-	--dpi)         DPI="${2:?--dpi needs a number}"; shift ;;
+	--scale)       SCALE="${2:?--scale needs a number}"; shift ;;
 	--steam)       WITH_STEAM=1 ;;
 	--no-packages) DO_PACKAGES=0 ;;
-	--no-build)    DO_BUILD=0 ;;
 	-h|--help)     usage; exit 0 ;;
 	*)             echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
 	esac
@@ -99,29 +97,55 @@ if [ "$DO_PACKAGES" -eq 1 ]; then
 	[ ${#MISSING[@]} -eq 0 ] || sudo pacman -S --noconfirm "${MISSING[@]}"
 fi
 
-# ---------------------------------------------------------------- display scaling
-# On a re-run keep the DPI already in ~/.Xresources, so a scaling picked by hand (or with an
-# earlier --dpi) is not replaced. A first install uses 96 unless --dpi says otherwise.
-if [ -z "$DPI" ] && [ -f "$HOME/.Xresources" ]; then
-	DPI="$(awk '/^Xft\.dpi:/{ if (int($2) > 0) print int($2); exit }' "$HOME/.Xresources")"
-	[ -n "$DPI" ] && say "Keeping your current display scaling: ${DPI} DPI (change it with --dpi N)"
-fi
-DPI="${DPI:-96}"
-case "$DPI" in ''|*[!0-9]*) die "--dpi must be a number, got '$DPI'" ;; esac
-
 # ---------------------------------------------------------------- dotfiles + scripts
 say "Installing config files and scripts into $HOME"
 while IFS= read -r -d '' f; do
-	rel=${f#home/}
-	if [ "$rel" = ".Xresources" ]; then
-		tmp="$(mktemp)"
-		sed "s/^Xft\.dpi:.*/Xft.dpi: ${DPI}/" "$f" > "$tmp"
-		place "$tmp" "$HOME/$rel"
-		rm -f "$tmp"
-	else
-		place "$f" "$HOME/$rel"
-	fi
+	place "$f" "$HOME/${f#home/}"
 done < <(find home -type f -print0)
+
+# Files from the X11/dwm version of this setup that now get in the way (moved into the backup):
+# the old portals.conf forced the GTK portal, which cannot share the screen under niri.
+for rel in .config/xdg-desktop-portal/portals.conf .config/systemd/user/dwm-mouse.service \
+	.local/bin/dwm-blank .local/bin/dwm-shot .local/bin/keepassxc; do
+	[ -e "$HOME/$rel" ] || continue
+	mkdir -p "$BACKUP/$(dirname "$rel")"
+	mv "$HOME/$rel" "$BACKUP/$rel"
+	REPLACED+=("$rel")
+done
+
+# The mouse speed saved with Mod+Shift+M goes into niri's config (mouse.kdl).
+"$HOME/.local/bin/dwm-mouse" apply
+
+# ---------------------------------------------------------------- display scaling + refresh rate
+# Monitors differ per machine, so their settings live in ~/.config/niri/local.kdl, not in the repo's
+# config.kdl. Written on the first install (or with --scale) for every monitor connected now; after
+# that a re-run leaves it alone, so edits made by hand stay put. Each monitor gets its native
+# resolution without a refresh rate, which makes niri pick the fastest one: a monitor's "preferred"
+# mode is often 60 Hz even on a 240 Hz panel, and fullscreen games then only offer 60 Hz.
+LOCAL_KDL="$HOME/.config/niri/local.kdl"
+if [ -n "$SCALE" ] || [ ! -e "$LOCAL_KDL" ]; then
+	if [ -z "$SCALE" ]; then
+		dpi="$(awk '/^Xft\.dpi:/{ if (int($2) > 0) print int($2); exit }' "$HOME/.Xresources" 2>/dev/null || true)"
+		SCALE="$(awk -v d="${dpi:-96}" 'BEGIN { print d / 96 }')"
+	fi
+	awk -v s="$SCALE" 'BEGIN { exit !(s ~ /^[0-9]*\.?[0-9]+$/ && s >= 0.5 && s <= 4) }' \
+		|| die "--scale must be a number from 0.5 to 4, got '$SCALE'"
+	say "Display scaling: $SCALE"
+	tmp="$(mktemp)"
+	{
+		echo "// This machine's monitors; niri applies changes on save. Names and modes: niri msg outputs"
+		echo "// Other options: mode \"2560x1440@143.912\", variable-refresh-rate, position x=0 y=0"
+		for s in /sys/class/drm/card*-*/status; do
+			[ "$(cat "$s")" = connected ] || continue
+			d="${s%/status}"; name="${d##*/}"; name="${name#card*-}"; mode="$(head -n1 "$d/modes")"
+			printf 'output "%s" {\n' "$name"
+			[ -z "$mode" ] || printf '    mode "%s"\n' "$mode"
+			printf '    scale %s\n}\n' "$SCALE"
+		done
+	} > "$tmp"
+	place "$tmp" "$LOCAL_KDL"
+	rm -f "$tmp"
+fi
 
 # ---------------------------------------------------------------- Firefox
 find_ff_profile() {
@@ -163,31 +187,11 @@ else
 	warn "firefox is not installed; skipping its settings"
 fi
 
-# ---------------------------------------------------------------- Xorg config (/etc/X11)
-# Touchpad tap-to-click everywhere (it only matches touchpads, so desktops are unaffected).
-# AMD's X driver with TearFree only when a GPU runs on the amdgpu kernel driver, so NVIDIA and
-# Intel machines get neither the package nor the file. Takes effect when X next starts.
-say "Xorg config: touchpad tap-to-click, AMD TearFree"
-HAS_AMDGPU=0
-for d in /sys/class/drm/card[0-9]*/device/driver; do
-	[ "$(basename "$(readlink -f "$d")")" = amdgpu ] && HAS_AMDGPU=1
-done
-if [ "$HAS_AMDGPU" -eq 1 ] && [ "$DO_PACKAGES" -eq 1 ] && ! pacman -T xf86-video-amdgpu >/dev/null; then
-	sudo pacman -S --noconfirm xf86-video-amdgpu   # only when missing, as for packages.txt
-fi
-for f in etc/X11/xorg.conf.d/*.conf; do
-	dest="/$f"
-	if [ "${f##*/}" = 20-amdgpu.conf ] && [ "$HAS_AMDGPU" -eq 0 ]; then
-		continue
-	fi
-	sudo_place "$f" "$dest"
-done
-
-# Replugging a mouse re-applies the dwm-mouse settings (Mod+Shift+M): the rule starts a user service.
-# The 70- rule lets the same menu read a Razer mouse's DPI without root.
-say "udev: re-apply mouse settings on replug, Razer DPI access"
-sudo_place etc/udev/rules.d/90-dwm-mouse.rules /etc/udev/rules.d/90-dwm-mouse.rules
+# The 70- rule lets the mouse menu (Mod+Shift+M) read a Razer mouse's DPI without root. The 90- rule
+# from the X11 version re-applied mouse settings on replug; niri does that itself now.
+say "udev: Razer DPI access"
 sudo_place etc/udev/rules.d/70-dwm-mouse-dpi.rules /etc/udev/rules.d/70-dwm-mouse-dpi.rules
+[ ! -e /etc/udev/rules.d/90-dwm-mouse.rules ] || sudo rm /etc/udev/rules.d/90-dwm-mouse.rules
 sudo udevadm control --reload || warn "could not reload udev rules; they take effect after a reboot"
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
@@ -295,21 +299,6 @@ else
 	warn "dconf is not installed; skipping the desktop dark preference"
 fi
 
-# ---------------------------------------------------------------- dwm / st / dmenu
-if [ "$DO_BUILD" -eq 1 ]; then
-	say "Building and installing dwm, st and dmenu (sudo for 'make install')"
-	for t in dwm st dmenu; do
-		dest="$HOME/.local/src/$t"
-		mkdir -p "$dest"
-		[ -e "$dest/config.h" ] && backup_if_different "$dest/config.h" "suckless/$t/config.h"
-		cp -a "suckless/$t/." "$dest/"
-	done
-	for t in dwm st dmenu; do
-		make -C "$HOME/.local/src/$t"
-		sudo make -C "$HOME/.local/src/$t" install
-	done
-fi
-
 # ---------------------------------------------------------------- Steam (optional)
 if [ "$WITH_STEAM" -eq 1 ]; then
 	say "Steam"
@@ -336,17 +325,18 @@ mkdir -p "$HOME/.local/state"
 git rev-parse HEAD > "$HOME/.local/state/arch-dwm-desktop-installed"
 # Hand edits to these files are gone from the live copies; copy back into the repo any worth keeping.
 if [ ${#REPLACED[@]} -gt 0 ]; then
-	warn "these files differed from the repo and were replaced (old copies in $BACKUP):"
+	warn "these files differed from the repo and were replaced or removed (old copies in $BACKUP):"
 	printf '  ~/%s\n' "${REPLACED[@]}" >&2
 fi
 cat <<EOF
 
 Next steps:
-  1. Log out, then log in on the first text console (Ctrl+Alt+F1): X starts automatically.
-     (On another console, or after exiting X, run:  startx)
-  2. Mod is the Super/Windows key. Mod+Shift+Enter opens a terminal, Mod+P a launcher.
-     See README.md for the audio keys and the full list.
+  1. Log out, then log in on the first text console (Ctrl+Alt+F1): niri starts automatically.
+     (On another console, or after quitting niri, run:  niri-session)
+  2. Mod is the Super/Windows key. Mod+Shift+Enter opens a terminal, Mod+P a launcher,
+     Mod+Shift+/ lists every key. See README.md.
   3. NVIDIA card? Install the driver yourself first (e.g. 'sudo pacman -S nvidia-open'),
      since the right package depends on your GPU and kernel. It is not part of this repo.
-  4. Display too big/small?  ./install.sh --no-packages --no-build --dpi 120   (or 144, 192...)
+  4. Display too big/small?  ./install.sh --no-packages --scale 1.25   (or 1.5, 2...),
+     or edit ~/.config/niri/local.kdl, which applies the moment you save it.
 EOF
