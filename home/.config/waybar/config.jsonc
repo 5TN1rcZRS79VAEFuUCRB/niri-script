@@ -3,7 +3,9 @@
 {
     "position": "top",
     "margin-top": 5,
-    "margin-bottom": 5,  // a gap above the menus too, which open just under the bar
+    // Reserve no space: niri keeps windows clear of the bar with struts (~/.config/niri/config.kdl),
+    // so the menus (~/.local/bin/dmenu) can open over the bar instead of under it.
+    "exclusive": false,
     "margin-left": 8,
     "margin-right": 8,
     "modules-left": ["niri/workspaces", "niri/window"],

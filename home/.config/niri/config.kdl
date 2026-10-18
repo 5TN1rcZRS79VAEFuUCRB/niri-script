@@ -13,6 +13,11 @@ input {
 
 layout {
     gaps 8
+    // Room for the bar, which reserves none itself so the menus can open over it (~/.config/waybar/).
+    // Hiding the bar (Mod+B) leaves this space empty.
+    struts {
+        top 28
+    }
     background-color "#000000"
     center-focused-column "never"
     preset-column-widths {
