@@ -4,6 +4,7 @@
 # --- desktop: niri (window manager), waybar (bar + tray), foot (terminal), bemenu (dmenu for Wayland) ---
 niri
 xwayland-satellite        # X11-only apps (Steam, many games); niri starts it when one opens
+xdotool                   # Mod+Shift+D types Discord's mute key into XWayland
 xdg-desktop-portal-gnome  # screen sharing and screenshots for apps under niri
 waybar
 foot

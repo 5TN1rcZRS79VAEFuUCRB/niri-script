@@ -161,6 +161,9 @@ binds {
     Mod+Shift+F12 { spawn "niri-audio" "vol" "micup"; }
     Mod+Shift+F11 { spawn "niri-audio" "vol" "micdown"; }
     Mod+Shift+F10 { spawn "niri-audio" "vol" "micmute"; }
+    // Discord mute (set its Toggle Mute keybind to Ctrl+Shift+F12). Discord runs on XWayland and only
+    // hears keys typed into an X11 window, so this types that key into XWayland for it.
+    Mod+Shift+D repeat=false { spawn "xdotool" "key" "--clearmodifiers" "ctrl+shift+F12"; }
     XF86AudioRaiseVolume allow-when-locked=true { spawn "niri-audio" "vol" "up"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn "niri-audio" "vol" "down"; }
     XF86AudioMute        allow-when-locked=true { spawn "niri-audio" "vol" "mute"; }
