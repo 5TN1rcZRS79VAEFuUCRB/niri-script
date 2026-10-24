@@ -199,9 +199,13 @@ sudo udevadm control --reload || warn "could not reload udev rules; they take ef
 sudo udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null || true
 systemctl --user daemon-reload 2>/dev/null || true
 
-# Outside niri (the login prompt after a reboot) nothing turned the monitors off.
+# Outside niri (the login prompt after a reboot) nothing turned the monitors off. The udev rule keeps
+# them off when a DisplayPort monitor's hotplug on going to sleep lights the console again.
 say "Console: monitors off after 10 minutes idle"
 sudo_place etc/systemd/system/console-blank.service /etc/systemd/system/console-blank.service
+sudo_place usr/local/libexec/console-reblank /usr/local/libexec/console-reblank
+sudo_place etc/udev/rules.d/90-console-reblank.rules /etc/udev/rules.d/90-console-reblank.rules
+sudo udevadm control --reload || warn "could not reload udev rules; they take effect after a reboot"
 sudo systemctl daemon-reload
 sudo systemctl enable console-blank.service >/dev/null 2>&1 || warn "could not enable console-blank.service"
 sudo systemctl restart console-blank.service || warn "could not start console-blank.service; it runs at the next boot"
