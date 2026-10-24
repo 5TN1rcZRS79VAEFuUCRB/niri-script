@@ -81,6 +81,14 @@ window-rule {
     open-floating true
 }
 
+// Steam's pop-up notifications (friend online, download done): bottom-right corner, without
+// taking focus, instead of floating in the middle of the screen.
+window-rule {
+    match app-id="^steam$" title=r#"^notificationtoasts_\d+_desktop$"#
+    default-floating-position x=10 y=10 relative-to="bottom-right"
+    open-focused false
+}
+
 // Garry's Mod runs windowed (borderless); niri makes the window fill the monitor.
 window-rule {
     match app-id="^gmod$"
