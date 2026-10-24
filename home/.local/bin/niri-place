@@ -16,7 +16,8 @@ import subprocess
 # this order at the top. Proton games are steam_app_<id>; add a native game's app-id (niri msg windows).
 GROUPS = [
     [r"firefox$", r"^discord$", r"^foot$"],
-    [r"^steam$", r"^steam_app_|^gmod$|^org\.vinegarhq\.Sober$"],
+    [r"^steam$|^org\.prismlauncher\.PrismLauncher$",
+     r"^steam_app_|^gmod$|^org\.vinegarhq\.Sober$|^com\.mojang\.minecraft$"],
 ]
 
 

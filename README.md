@@ -72,7 +72,7 @@ empty one at the bottom: move a window down to it to start a new workspace, and 
 workspace disappears. The dots on the left of the bar show them. Click one to go there.
 
 Some apps have their own spot: Firefox, Discord, then the terminal, left to right, on the top
-workspace, and Steam, then the game, on the one below (Proton games, Garry's Mod and Roblox; add a
+workspace, and Steam, then the game, on the one below (Proton games, Garry's Mod, Roblox, and Prism Launcher then Minecraft; add a
 native game's app-id in `niri-place`). Opening one takes you there; the workspace is made when the
 first of them opens and goes away like any other once they are all closed. Everything else opens
 where you are, as before.
