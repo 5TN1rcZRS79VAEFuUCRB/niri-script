@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Re-encode a video to fit Discord's upload limit (default 10 MB, the free tier).
+# Usage: discord-compress input.mp4 [target_MB]   ->   input.discord.mp4
+set -euo pipefail
+in=$1; mb=${2:-10}
+out="${in%.*}.discord.mp4"
+dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$in")
+audio_k=96
+# 95% of the budget to leave room for container overhead
+total_k=$(awk -v mb="$mb" -v d="$dur" 'BEGIN{printf "%d", mb*8192*0.95/d}')
+video_k=$((total_k - audio_k))
+if (( video_k < 150 )); then echo "Clip too long for ${mb} MB (${video_k}k video). Trim it first." >&2; exit 1; fi
+# Lower resolution/fps as bitrate drops so it doesn't turn to mush
+if   (( video_k >= 5000 )); then vf="scale=-2:'min(1080,ih)'"; fps=60
+elif (( video_k >= 2500 )); then vf="scale=-2:'min(720,ih)'";  fps=60
+elif (( video_k >= 1000 )); then vf="scale=-2:'min(720,ih)'";  fps=30
+else                             vf="scale=-2:'min(480,ih)'";  fps=30; fi
+log=$(mktemp -u)
+ffmpeg -hide_banner -loglevel error -stats -y -i "$in" -vf "$vf,fps=$fps" -c:v libx264 -preset slow -b:v ${video_k}k \
+  -pass 1 -passlogfile "$log" -an -f null /dev/null
+ffmpeg -hide_banner -loglevel error -stats -y -i "$in" -vf "$vf,fps=$fps" -c:v libx264 -preset slow -b:v ${video_k}k \
+  -pass 2 -passlogfile "$log" -c:a aac -b:a ${audio_k}k -ac 2 -pix_fmt yuv420p -movflags +faststart "$out"
+rm -f "$log"*
+echo "$out  $(du -h "$out" | cut -f1)"

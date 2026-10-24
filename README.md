@@ -55,6 +55,7 @@ with niri picking the fastest refresh rate for it. On a desktop (no battery) the
 | Syncthing (keeps the KeePassXC database in sync), started now and at every login | `systemctl --user enable syncthing`. Pair devices and share the folder yourself at http://127.0.0.1:8384; keys are never in this repo |
 | Auto-update: every 5 minutes `niri-update.timer` pulls this clone and, on a new commit, re-runs `install.sh` and restarts niri once you are idle (10 minutes without input); the monitors stay off through the restart. Failures show a notification (`journalctl --user -u niri-update`). Needs passwordless sudo, which the installer sets up: anything running as you, and anyone who can push here, gets root | `~/.local/share/niri-script` (link to the clone), `/etc/sudoers.d/10-niri-update` (undo: delete it and `systemctl --user disable --now niri-update.timer`) |
 | Desktop-wide "prefer dark" | dconf (`org.gnome.desktop.interface`) |
+| Desktops only (no battery): OBS starts hidden in the tray at login with a 30-second replay buffer, and `Alt+F10` saves a clip plus a copy under Discord's 10 MB limit (`obs-clip`, `discord-compress`). Recordings go to `~/Videos/OBS/` as 1080p60 H.264 MP4 | packages `obs-studio`, `python-websockets`; OBS's `Discord` profile in `~/.config/obs-studio/` (written once), the key and autostart in `~/.config/niri/local.kdl` |
 | git commit name and email (GitHub noreply address) | `~/.gitconfig` (only `user.name` and `user.email`) |
 | Tailscale, and `ssh arch-server` over it (no browser login; run `sudo tailscale up` once per machine) | `~/.ssh/config.d/`, `~/.ssh/known_hosts.d/`, plus an `Include` line at the top of your own `~/.ssh/config` |
 | Claude Code: ponytail + caveman plugins, caveman proxy started with every session (only if `claude` is installed; undo with `caveman disable claude`) | `~/.claude/settings.json`, `~/.claude.json`, `~/.caveman/` |
@@ -94,6 +95,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 | **Mouse speed / acceleration profile (flat or adaptive), shows a Razer or Endgame Gear mouse's DPI** | `Mod+Shift+M` |
 | **School assignments: next task, 10-minute focus timer, open / mark done** | `Mod+T` |
 | **Screenshot: whole screen / pick an area or window / the focused window** | `Print` / `Shift+Print` / `Alt+Print` |
+| **Save the last 30 seconds as a clip, plus a Discord-sized copy (desktops)** | `Alt+F10` |
 
 All keys are in `~/.config/niri/config.kdl` (copied from `home/.config/niri/` here); niri applies a
 saved change at once.
