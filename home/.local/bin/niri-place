@@ -6,11 +6,14 @@ starts one of its own at the top (games just below main); it then moves to its c
 as listed in GROUPS. Windows of no group open where niri puts them, and a group's workspace goes
 away once it is empty, like any other.
 
-  niri-place    runs until niri exits (config.kdl starts it at login)
+  niri-place         runs until niri exits (config.kdl starts it at login)
+  niri-place go N    Mod+1..3: the workspace of group N (counting from 1), or workspace N if that
+                     group has no window open
 """
 import json
 import re
 import subprocess
+import sys
 
 # Each group's columns, left to right: one app-id pattern per column. Groups' workspaces stack in
 # this order at the top. Proton games are steam_app_<id>; add a native game's app-id (niri msg windows).
@@ -18,6 +21,7 @@ GROUPS = [
     [r"firefox$", r"^discord$", r"^foot$"],
     [r"^steam$|^org\.prismlauncher\.PrismLauncher$",
      r"^steam_app_|^gmod$|^org\.vinegarhq\.Sober$|^com\.mojang\.minecraft$"],
+    [r"^anki$"],
 ]
 
 
@@ -106,7 +110,16 @@ def place(win_id):
     to_column(win_id, GROUPS[g])
 
 
+def go(n):
+    windows, _ = tiled(None)
+    workspaces = {ws["id"]: ws for ws in niri("workspaces")}
+    idx = min((workspaces[w["workspace_id"]]["idx"] for w in windows if group_of(w) == n - 1), default=n)
+    action("focus-workspace", str(idx))
+
+
 def main():
+    if sys.argv[1:2] == ["go"]:
+        return go(int(sys.argv[2]))
     known = set()
     stream = subprocess.Popen(["niri", "msg", "-j", "event-stream"], stdout=subprocess.PIPE, text=True)
     for line in stream.stdout:

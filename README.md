@@ -73,7 +73,7 @@ workspace disappears. The dots on the left of the bar show them. Click one to go
 
 Some apps have their own spot: Firefox, Discord, then the terminal, left to right, on the top
 workspace, and Steam, then the game, on the one below (Proton games, Garry's Mod, Roblox, and Prism Launcher then Minecraft; add a
-native game's app-id in `niri-place`). Opening one takes you there; the workspace is made when the
+native game's app-id in `niri-place`), and Anki below that. Opening one takes you there; the workspace is made when the
 first of them opens and goes away like any other once they are all closed. Everything else opens
 where you are, as before.
 
@@ -81,7 +81,7 @@ where you are, as before.
 | --- | --- |
 | Terminal / launcher | `Mod+Shift+Enter` / `Mod+P` |
 | Previous / next window | `Mod+A` / `Mod+D` (or `Mod+H` / `Mod+L`) |
-| First / second workspace | `Mod+1` / `Mod+2` |
+| Firefox-Discord-terminal / Steam-games / Anki workspace | `Mod+1` / `Mod+2` / `Mod+3` |
 | Workspace above / below | `Mod+W` / `Mod+S` (or `Mod+K` / `Mod+J`, or `Mod`+scroll with a wheel or two fingers on the touchpad) |
 | Take the window along | add `Ctrl` (`Mod+Ctrl+W/A/S/D`); below the last workspace makes a new one |
 | Overview of every workspace (pick a window with the mouse) | `Mod+Tab` |
