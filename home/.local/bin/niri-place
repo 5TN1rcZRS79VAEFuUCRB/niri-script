@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-niri-place: keeps the apps on the fixed workspaces in a set left-to-right order. The window rules in
-~/.config/niri/config.kdl send each app to its workspace, but niri opens it beside whatever column
-was focused there; this moves a new window to its column in ORDER below. Windows not listed (on
-"games", every game) stay where niri put them, after the listed ones.
+niri-place: gives Firefox, Discord and the terminal one workspace, and Steam and games another, each
+app in a set column. A new window of a group joins the workspace that already holds that group, or
+starts one of its own at the top (games just below main); it then moves to its column, left to right
+as listed in GROUPS. Windows of no group open where niri puts them, and a group's workspace goes
+away once it is empty, like any other.
 
   niri-place    runs until niri exits (config.kdl starts it at login)
 """
@@ -11,10 +12,12 @@ import json
 import re
 import subprocess
 
-ORDER = {
-    "main": [r"firefox$", r"^discord$", r"^foot$"],
-    "games": [r"^steam$"],
-}
+# Each group's columns, left to right: one app-id pattern per column. Groups' workspaces stack in
+# this order at the top. Proton games are steam_app_<id>; add a native game's app-id (niri msg windows).
+GROUPS = [
+    [r"firefox$", r"^discord$", r"^foot$"],
+    [r"^steam$", r"^steam_app_|^gmod$|^org\.vinegarhq\.Sober$"],
+]
 
 
 def niri(*args):
@@ -29,36 +32,77 @@ def rank(order, app_id):
     return next((i for i, p in enumerate(order) if re.search(p, app_id or "")), len(order))
 
 
+def group_of(w):
+    return next((g for g, order in enumerate(GROUPS) if rank(order, w["app_id"]) < len(order)), None)
+
+
 def column(w):
     pos = w["layout"]["pos_in_scrolling_layout"]
     return pos[0] if pos else None
 
 
-def place(win_id):
-    windows = niri("windows")
-    w = next((w for w in windows if w["id"] == win_id), None)
-    if not w or column(w) is None:
+def tiled(win_id):
+    """All tiled windows, and the one with this id (None if it is gone or floating)."""
+    windows = [w for w in niri("windows") if column(w)]
+    return windows, next((w for w in windows if w["id"] == win_id), None)
+
+
+# Workspaces are referred to by index, which niri reads on the focused monitor.
+# ponytail: one monitor assumed; with several, a group's window could land on the wrong one.
+def to_workspace(win_id, g):
+    """Move the window to its group's workspace, or to one of its own just below the groups before it."""
+    windows, w = tiled(win_id)
+    workspaces = {ws["id"]: ws for ws in niri("workspaces")}
+    home = {}
+    for o in sorted((o for o in windows if o["id"] != win_id), key=lambda o: workspaces[o["workspace_id"]]["idx"]):
+        home.setdefault(group_of(o), o["workspace_id"])
+    if g in home:
+        if home[g] != w["workspace_id"]:
+            action("move-window-to-workspace", "--window-id", str(win_id), str(workspaces[home[g]]["idx"]))
         return
-    name = next((ws["name"] for ws in niri("workspaces") if ws["id"] == w["workspace_id"]), None)
-    order = ORDER.get(name)
-    if not order or rank(order, w["app_id"]) == len(order):
+    here = workspaces[w["workspace_id"]]
+    if any(o["workspace_id"] == here["id"] for o in windows if o["id"] != win_id):
+        empty = max(ws["idx"] for ws in workspaces.values() if ws["output"] == here["output"])
+        action("move-window-to-workspace", "--window-id", str(win_id), str(empty))
+        _, w = tiled(win_id)
+        here = next(ws for ws in niri("workspaces") if ws["id"] == w["workspace_id"])
+    target = 1 + sum(1 for other in home if other is not None and other < g)
+    if here["idx"] != target:
+        action("move-workspace-to-index", "--reference", str(here["idx"]), str(target))
+
+
+def to_column(win_id, order):
+    """Move the window right after the last column that comes before it, or that is the same app."""
+    windows, w = tiled(win_id)
+    if not w:
         return
     r = rank(order, w["app_id"])
     col = column(w)
-    others = [o for o in windows if o["workspace_id"] == w["workspace_id"] and o["id"] != win_id and column(o)]
+    others = [o for o in windows if o["workspace_id"] == w["workspace_id"] and o["id"] != win_id]
     if any(column(o) == col for o in others):
         return  # opened stacked in a column with others; leave it there
-    # Columns once this one is taken out; it goes right after the last one that sorts at or before it.
+    # Column numbers once this one is taken out.
     before = [column(o) - (column(o) > col) for o in others if rank(order, o["app_id"]) <= r]
     target = max(before, default=0) + 1
     if target == col:
         return
     focused = niri("focused-window")
-    if focused and focused["id"] != win_id:
+    away = focused and focused["id"] != win_id
+    if away:
         action("focus-window", "--id", str(win_id))
     action("move-column-to-index", str(target))
-    if focused and focused["id"] != win_id:
+    if away:
         action("focus-window", "--id", str(focused["id"]))
+
+
+def place(win_id):
+    _, w = tiled(win_id)
+    g = group_of(w) if w else None
+    if g is None:
+        return
+    to_workspace(win_id, g)
+    action("focus-window", "--id", str(win_id))  # opening one of these apps takes you to it
+    to_column(win_id, GROUPS[g])
 
 
 def main():
