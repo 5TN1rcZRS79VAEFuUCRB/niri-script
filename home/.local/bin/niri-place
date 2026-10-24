@@ -130,7 +130,10 @@ def main():
             win_id = event["WindowOpenedOrChanged"]["window"]["id"]
             if win_id not in known:
                 known.add(win_id)
-                place(win_id)
+                try:
+                    place(win_id)
+                except Exception:
+                    pass  # the window closed or changed partway (a splash screen, a quick dialog); skip it
         elif "WindowClosed" in event:
             known.discard(event["WindowClosed"]["id"])
 
