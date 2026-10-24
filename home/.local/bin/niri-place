@@ -100,14 +100,23 @@ def to_column(win_id, order):
         action("focus-window", "--id", str(focused["id"]))
 
 
-def place(win_id):
-    _, w = tiled(win_id)
+def place(win_id, before):
+    """before: the window focused when this one opened."""
+    windows, w = tiled(win_id)
     g = group_of(w) if w else None
     if g is None:
         return
+    # A Steam or Prism window (a friend's chat, an update prompt) opening while you play stays behind the game.
+    games = GROUPS[1]
+    game = next((o["id"] for o in windows if o["id"] == before and rank(games, o["app_id"]) == 1), None)
+    if g != 1 or rank(games, w["app_id"]) != 0:
+        game = None
     to_workspace(win_id, g)
-    action("focus-window", "--id", str(win_id))  # opening one of these apps takes you to it
+    if not game:
+        action("focus-window", "--id", str(win_id))  # opening one of these apps takes you to it
     to_column(win_id, GROUPS[g])
+    if game:
+        action("focus-window", "--id", str(game))
 
 
 def go(n):
@@ -121,17 +130,24 @@ def main():
     if sys.argv[1:2] == ["go"]:
         return go(int(sys.argv[2]))
     known = set()
+    focused = None
     stream = subprocess.Popen(["niri", "msg", "-j", "event-stream"], stdout=subprocess.PIPE, text=True)
     for line in stream.stdout:
         event = json.loads(line)
         if "WindowsChanged" in event:
             known = {w["id"] for w in event["WindowsChanged"]["windows"]}
+            focused = next((w["id"] for w in event["WindowsChanged"]["windows"] if w["is_focused"]), None)
+        elif "WindowFocusChanged" in event:
+            focused = event["WindowFocusChanged"]["id"]
         elif "WindowOpenedOrChanged" in event:
-            win_id = event["WindowOpenedOrChanged"]["window"]["id"]
+            window = event["WindowOpenedOrChanged"]["window"]
+            win_id, before = window["id"], focused
+            if window["is_focused"]:
+                focused = win_id  # niri reports focus moving to a new window here, not in WindowFocusChanged
             if win_id not in known:
                 known.add(win_id)
                 try:
-                    place(win_id)
+                    place(win_id, before)
                 except Exception:
                     pass  # the window closed or changed partway (a splash screen, a quick dialog); skip it
         elif "WindowClosed" in event:
