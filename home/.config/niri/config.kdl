@@ -92,7 +92,7 @@ window-rule {
 
 // Roblox (Sober) never requests fullscreen itself on Wayland.
 window-rule {
-    match app-id="^org\.vinegarhq\.Sober$"
+    match app-id=r#"^org\.vinegarhq\.Sober$"#
     open-fullscreen true
 }
 
