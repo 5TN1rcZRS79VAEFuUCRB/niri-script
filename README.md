@@ -71,10 +71,16 @@ sideways, so nothing gets squeezed when you open more; `Mod+R` narrows one to fi
 empty one at the bottom: move a window down to it to start a new workspace, and an emptied
 workspace disappears. The dots on the left of the bar show them. Click one to go there.
 
+Two workspaces stay fixed at the top, and opening an app below takes you to its spot: `main` has
+Firefox, Discord, then the terminal, left to right; `games` has Steam, then the game (Proton games,
+Garry's Mod and Roblox; add a native game's app-id to the rule in `config.kdl`). `niri-place` keeps
+that order however the apps were opened. Everything else opens where you are, as before.
+
 | Action | Keys |
 | --- | --- |
 | Terminal / launcher | `Mod+Shift+Enter` / `Mod+P` |
 | Previous / next window | `Mod+A` / `Mod+D` (or `Mod+H` / `Mod+L`) |
+| Workspace main / games | `Mod+1` / `Mod+2` |
 | Workspace above / below | `Mod+W` / `Mod+S` (or `Mod+K` / `Mod+J`, or `Mod`+scroll with a wheel or two fingers on the touchpad) |
 | Take the window along | add `Ctrl` (`Mod+Ctrl+W/A/S/D`); below the last workspace makes a new one |
 | Overview of every workspace (pick a window with the mouse) | `Mod+Tab` |

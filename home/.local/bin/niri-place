@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""
+niri-place: keeps the apps on the fixed workspaces in a set left-to-right order. The window rules in
+~/.config/niri/config.kdl send each app to its workspace, but niri opens it beside whatever column
+was focused there; this moves a new window to its column in ORDER below. Windows not listed (on
+"games", every game) stay where niri put them, after the listed ones.
+
+  niri-place    runs until niri exits (config.kdl starts it at login)
+"""
+import json
+import re
+import subprocess
+
+ORDER = {
+    "main": [r"firefox$", r"^discord$", r"^foot$"],
+    "games": [r"^steam$"],
+}
+
+
+def niri(*args):
+    return json.loads(subprocess.run(["niri", "msg", "-j", *args], capture_output=True, check=True).stdout)
+
+
+def action(*args):
+    subprocess.run(["niri", "msg", "action", *args], check=True)
+
+
+def rank(order, app_id):
+    return next((i for i, p in enumerate(order) if re.search(p, app_id or "")), len(order))
+
+
+def column(w):
+    pos = w["layout"]["pos_in_scrolling_layout"]
+    return pos[0] if pos else None
+
+
+def place(win_id):
+    windows = niri("windows")
+    w = next((w for w in windows if w["id"] == win_id), None)
+    if not w or column(w) is None:
+        return
+    name = next((ws["name"] for ws in niri("workspaces") if ws["id"] == w["workspace_id"]), None)
+    order = ORDER.get(name)
+    if not order or rank(order, w["app_id"]) == len(order):
+        return
+    r = rank(order, w["app_id"])
+    col = column(w)
+    others = [o for o in windows if o["workspace_id"] == w["workspace_id"] and o["id"] != win_id and column(o)]
+    if any(column(o) == col for o in others):
+        return  # opened stacked in a column with others; leave it there
+    # Columns once this one is taken out; it goes right after the last one that sorts at or before it.
+    before = [column(o) - (column(o) > col) for o in others if rank(order, o["app_id"]) <= r]
+    target = max(before, default=0) + 1
+    if target == col:
+        return
+    focused = niri("focused-window")
+    if focused and focused["id"] != win_id:
+        action("focus-window", "--id", str(win_id))
+    action("move-column-to-index", str(target))
+    if focused and focused["id"] != win_id:
+        action("focus-window", "--id", str(focused["id"]))
+
+
+def main():
+    known = set()
+    stream = subprocess.Popen(["niri", "msg", "-j", "event-stream"], stdout=subprocess.PIPE, text=True)
+    for line in stream.stdout:
+        event = json.loads(line)
+        if "WindowsChanged" in event:
+            known = {w["id"] for w in event["WindowsChanged"]["windows"]}
+        elif "WindowOpenedOrChanged" in event:
+            win_id = event["WindowOpenedOrChanged"]["window"]["id"]
+            if win_id not in known:
+                known.add(win_id)
+                place(win_id)
+        elif "WindowClosed" in event:
+            known.discard(event["WindowClosed"]["id"])
+
+
+if __name__ == "__main__":
+    main()

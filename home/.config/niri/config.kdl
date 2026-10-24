@@ -67,11 +67,38 @@ spawn-sh-at-startup "FONTCONFIG_FILE=$HOME/.config/waybar/fonts.conf waybar"
 spawn-at-startup "niri-todo" "daemon"
 // Steam's in-game overlay (Shift+Tab) at the display scale; see ~/.local/bin/niri-steam-overlay.
 spawn-at-startup "niri-steam-overlay"
+// Keeps Firefox, Discord and the terminal, and Steam, in their columns (~/.local/bin/niri-place).
+spawn-at-startup "niri-place"
 // After 10 minutes idle (never while a video player inhibits it) the monitors power off; any input
 // wakes them. If niri-update installed a new commit, the session also ends then, and
 // ~/.bash_profile starts niri again, which powers the monitors straight back off (niri-idle-restart).
 spawn-sh-at-startup "swayidle -w timeout 600 'niri msg action power-off-monitors; [ -e \"$XDG_RUNTIME_DIR/niri-restart-session\" ] && touch \"$XDG_RUNTIME_DIR/niri-idle-restart\" && niri msg action quit --skip-confirmation'"
 spawn-sh-at-startup "rm \"$XDG_RUNTIME_DIR/niri-idle-restart\" 2>/dev/null && niri msg action power-off-monitors"
+
+// Two fixed workspaces at the top, always there even when empty (Mod+1, Mod+2); the usual ones
+// still follow below them. Opening an app below takes you to its workspace, and niri-place puts it
+// in its column: main has Firefox, Discord, then the terminal; games has Steam, then the game.
+workspace "main"
+workspace "games"
+
+window-rule {
+    match app-id=r#"firefox$"#
+    match app-id="^discord$"
+    match app-id="^foot$"
+    exclude title="^Picture-in-Picture$"
+    open-on-workspace "main"
+    open-focused true
+}
+
+// Proton games are steam_app_<id>; a native game needs its own app-id here (niri msg windows).
+window-rule {
+    match app-id="^steam$"
+    match app-id="^steam_app_"
+    match app-id="^gmod$"
+    match app-id=r#"^org\.vinegarhq\.Sober$"#
+    open-on-workspace "games"
+    open-focused true
+}
 
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
@@ -125,6 +152,8 @@ binds {
     Mod+Ctrl+L { move-column-right; }
     Mod+Ctrl+K { move-window-up-or-to-workspace-up; }
     Mod+Ctrl+J { move-window-down-or-to-workspace-down; }
+    Mod+1 { focus-workspace "main"; }
+    Mod+2 { focus-workspace "games"; }
     Mod+Home { focus-column-first; }
     Mod+End  { focus-column-last; }
 
