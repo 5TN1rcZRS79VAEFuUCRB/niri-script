@@ -78,6 +78,24 @@ window-rule {
     open-floating true
 }
 
+// Garry's Mod runs windowed (borderless); niri makes the window fill the monitor.
+window-rule {
+    match app-id="^gmod$"
+    open-fullscreen true
+}
+
+// GONE Fishing (Proton) borderless window, same treatment.
+window-rule {
+    match app-id="^steam_app_3645890$"
+    open-fullscreen true
+}
+
+// Roblox (Sober) never requests fullscreen itself on Wayland.
+window-rule {
+    match app-id="^org\.vinegarhq\.Sober$"
+    open-fullscreen true
+}
+
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Shift+Return { spawn "foot"; }
